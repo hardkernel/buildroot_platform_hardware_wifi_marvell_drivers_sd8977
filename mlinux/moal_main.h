@@ -177,9 +177,9 @@ Change log:
 #define default_mpl_name    "mpl_sdio%d"
 #define mwiphy_name          "mwiphys%d"
 #else
-#define default_mlan_name    "mlan%%d"
-#define default_uap_name    "uap%%d"
-#define default_wfd_name    "wfd%%d"
+#define default_mlan_name    "wlan%%d"
+#define default_uap_name    "ap%%d"
+#define default_wfd_name    "p2p%%d"
 #define default_nan_name    "nan%%d"
 #define default_mpl_name    "mpl%d"
 #define mwiphy_name          "mwiphy%d"

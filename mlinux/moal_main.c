@@ -8968,6 +8968,14 @@ done:
  *
  *  @return        MLAN_STATUS_SUCCESS or MLAN_STATUS_FAILURE
  */
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(3, 14, 0))
+extern int wifi_setup_dt(void);
+extern void wifi_teardown_dt(void);
+#endif
+
+extern void sdio_reinit(void);
+extern void extern_wifi_set_enable(int is_on);
+
 static int
 woal_init_module(void)
 {
@@ -8975,6 +8983,16 @@ woal_init_module(void)
 	int index = 0;
 
 	ENTER();
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(3, 14, 0))
+	wifi_setup_dt();
+	msleep(100);
+#endif
+	extern_wifi_set_enable(0);
+	msleep(100);
+	extern_wifi_set_enable(1);
+	msleep(100);
+	sdio_reinit();
+	msleep(200);
 
 	PRINTM(MMSG, "wlan: Loading MWLAN driver\n");
 	/* Init the wlan_private pointer array first */
@@ -9161,6 +9179,11 @@ exit_sem_err:
 		hang_workqueue = NULL;
 	}
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(3, 14, 0))
+	wifi_teardown_dt();
+#endif
+	msleep(100);
+	extern_wifi_set_enable(0);
 	LEAVE();
 }
 

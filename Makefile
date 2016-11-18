@@ -18,13 +18,29 @@
 # ARE EXPRESSLY DISCLAIMED.  The License provides additional details about
 # this warranty disclaimer.
 
-COMPATDIR=/lib/modules/$(KERNELVERSION_X86)/build/compat-wireless-3.2-rc1-1/include
+#COMPATDIR=/mnt/nfsroot/weiguang.ruan/android4.4/out/target/product/m200/obj/KERNEL_OBJ
+
+ifneq ($(src),)
+DRIVER_DIR = $(src)
+else
+DRIVER_DIR =  $(shell pwd)
+endif
+$(info DRIVER_DIR is $(DRIVER_DIR))
+
+COMPATDIR=/mnt/nfsroot/weiguang.ruan/linux/buildroot/output/build/linux-custom
+CROSS_COMPILE=arm-linux-gnueabihf-
 CC=		$(CROSS_COMPILE)gcc -I$(COMPATDIR)
 LD=		$(CROSS_COMPILE)ld
 BACKUP=		/root/backup
 YMD=		`date +%Y%m%d%H%M`
 
-#############################################################################
+#######COMPILE CHECK###################
+EXTRA_CFLAGS += -Wno-unused-but-set-variable
+EXTRA_CFLAGS += -Wno-pointer-sign
+#EXTRA_CFLAGS += -Wno-pointer-to-int-cast
+#EXTRA_CFLAGS += -Wno-int-to-pointer-cast
+
+############################################################################
 # Configuration Options
 #############################################################################
 
@@ -105,18 +121,19 @@ CONFIG_USERSPACE_32BIT_OVER_KERNEL_64BIT=n
 #############################################################################
 
 MODEXT = ko
-EXTRA_CFLAGS += -I$(M)/mlan
+EXTRA_CFLAGS += -I$(DRIVER_DIR)/mlan
 EXTRA_CFLAGS += -DLINUX
 
 
 ifeq ($(CONFIG_EMBEDDED_SUPP_AUTH), y)
-EXTRA_CFLAGS += -I$(M)/mlan/esa
-EXTRA_CFLAGS += -I$(M)/mlan/esa/common
+EXTRA_CFLAGS += -I$(DRIVER_DIR)/mlan/esa
+EXTRA_CFLAGS += -I$(DRIVER_DIR)/mlan/esa/common
 endif
 
 
 KERNELVERSION_X86 := 	$(shell uname -r)
-KERNELDIR ?= /lib/modules/$(KERNELVERSION_X86)/build
+#KERNELDIR ?= /mnt/nfsroot/weiguang.ruan/6.0_wpa/out/target/product/p212_43569/obj/KERNEL_OBJ
+KERNELDIR ?= /mnt/nfsroot/weiguang.ruan/linux/buildroot/output/build/linux-custom
 LD += -S
 
 BINDIR = ../bin_sd8xxx
@@ -445,7 +462,7 @@ sd8xxx-objs := $(MOALOBJS)
 else
 
 default:
-	$(MAKE) -C $(KERNELDIR) M=$(PWD) modules
+	$(MAKE) -C $(KERNELDIR) ARCH=arm M=$(PWD) modules -j8
 
 endif
 
@@ -574,6 +591,7 @@ distclean:
 	-find . -name ".*.cmd" -exec rm {} \;
 	-find . -name "*.mod.c" -exec rm {} \;
 	-rm -rf .tmp_versions
+	-rm -rf modules.builtin
 ifneq ($(APPDIR),)
 ifeq ($(CONFIG_STA_SUPPORT),y)
 	$(MAKE) -C mapp/mlanconfig $@
