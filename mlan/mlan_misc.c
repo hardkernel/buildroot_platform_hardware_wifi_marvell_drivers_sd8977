@@ -39,6 +39,7 @@ Change Log:
 #ifdef DRV_EMBEDDED_AUTHENTICATOR
 #include "authenticator_api.h"
 #endif
+#include <asm/div64.h>
 /********************************************************
 			Local Variables
 ********************************************************/
@@ -2766,7 +2767,9 @@ wlan_process_802dot11_mgmt_pkt(IN mlan_private *priv,
 			tstamps.t2 = (t_u32)prx_pd->toa_tod_tstamps;
 			tstamps.t2_err = 0;
 			tstamps.t3_err = 0;
-			tstamps.ingress_time = pmadapter->host_bbu_clk_delta / 10 + tstamps.t2;	//t2, t3 is 10ns and delta is in 1 ns unit
+			tstamps.ingress_time = pmadapter->host_bbu_clk_delta;//t2, t3 is 10ns and delta is in 1 ns unit
+			do_div(tstamps.ingress_time, 10);
+			tstamps.ingress_time += tstamps.t2;
 			PRINTM(MINFO, "T2: %d, T3: %d, ingress: %lu\n",
 			       tstamps.t2, tstamps.t3, tstamps.ingress_time);
 		}

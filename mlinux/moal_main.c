@@ -157,7 +157,7 @@ int fw_serial = 1;
 int napi;
 
 /** CAL data config file */
-char *cal_data_cfg;
+char *cal_data_cfg = "none";
 /** Init config file (MAC address, register etc.) */
 char *init_cfg;
 
@@ -171,6 +171,7 @@ int cntry_txpwr = 0;
 /** Init hostcmd file */
 char *init_hostcmd_cfg;
 
+#if 0
 #if defined(STA_WEXT) || defined(UAP_WEXT)
 /** CFG80211 and WEXT mode */
 int cfg80211_wext = STA_WEXT_MASK | UAP_WEXT_MASK;
@@ -178,6 +179,8 @@ int cfg80211_wext = STA_WEXT_MASK | UAP_WEXT_MASK;
 /** CFG80211 mode */
 int cfg80211_wext = STA_CFG80211_MASK | UAP_CFG80211_MASK;
 #endif
+#endif
+int cfg80211_wext = STA_CFG80211_MASK | UAP_CFG80211_MASK | STA_WEXT_MASK | UAP_WEXT_MASK;
 
 #if defined(STA_CFG80211) || defined(UAP_CFG80211)
 #if CFG80211_VERSION_CODE >= KERNEL_VERSION(3, 14, 0)
@@ -8083,6 +8086,14 @@ done:
  *
  *  @return        MLAN_STATUS_SUCCESS or MLAN_STATUS_FAILURE
  */
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(3, 14, 0))
+extern int wifi_setup_dt(void);
+extern void wifi_teardown_dt(void);
+#endif
+
+extern void sdio_reinit(void);
+extern void extern_wifi_set_enable(int is_on);
+
 static int
 woal_init_module(void)
 {
@@ -8090,6 +8101,16 @@ woal_init_module(void)
 	int index = 0;
 
 	ENTER();
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(3, 14, 0))
+	wifi_setup_dt();
+	msleep(100);
+#endif
+	extern_wifi_set_enable(0);
+	msleep(100);
+	extern_wifi_set_enable(1);
+	msleep(100);
+	sdio_reinit();
+	msleep(200);
 
 	PRINTM(MMSG, "wlan: Loading MWLAN driver\n");
 	/* Init the wlan_private pointer array first */
@@ -8278,6 +8299,12 @@ exit_sem_err:
 		destroy_workqueue(hang_workqueue);
 		hang_workqueue = NULL;
 	}
+
+	extern_wifi_set_enable(0);
+	msleep(100);
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(3, 14, 0))
+	wifi_teardown_dt();
+#endif
 
 	LEAVE();
 }
