@@ -2,7 +2,7 @@
  *
  *  @brief This file contains key management function for sta
  *
- * Copyright (C) 2014-2016, Marvell International Ltd.
+ * Copyright (C) 2014-2017, Marvell International Ltd.
  *
  * This software file (the "File") is distributed by Marvell International
  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
@@ -197,7 +197,7 @@ extern void KeyMgmtResetCounter(keyMgmtInfoSta_t *pKeyMgmtInfo);
 
 extern void keyMgmtSta_StartSession_internal(phostsa_private priv,
 					     keyMgmtInfoSta_t *pKeyMgmtInfoSta,
-					     // MicroTimerCallback_t callback,
+					     //MicroTimerCallback_t callback,
 					     UINT32 expiry, UINT8 flags);
 
 extern void KeyMgmtSta_handleMICDeauthTimer(keyMgmtInfoSta_t *pKeyMgmtInfoSta,

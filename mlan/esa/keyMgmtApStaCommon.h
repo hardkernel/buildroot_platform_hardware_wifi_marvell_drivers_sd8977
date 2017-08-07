@@ -2,7 +2,7 @@
  *
  *  @brief This file contains common api for authenticator and supplicant.
  *
- * Copyright (C) 2014-2016, Marvell International Ltd.
+ * Copyright (C) 2014-2017, Marvell International Ltd.
  *
  * This software file (the "File") is distributed by Marvell International
  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
@@ -80,4 +80,4 @@ extern void supplicantParseRsnIe(phostsa_private priv,
 				 AkmSuite_t *pAkmListOut, UINT8 akmOutMax,
 				 IEEEtypes_RSNCapability_t *pRsnCapOut,
 				 Cipher_t *pGrpMgmtCipherOut);
-#endif // KEYMGMTAPSTACOMMON_H__
+#endif //KEYMGMTAPSTACOMMON_H__

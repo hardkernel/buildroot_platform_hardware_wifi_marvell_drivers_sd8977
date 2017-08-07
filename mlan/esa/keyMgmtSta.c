@@ -1,7 +1,7 @@
 /** @file keyMgmtSta.c
  *
  *  @brief This file defines key management API for sta
- * Copyright (C) 2014-2016, Marvell International Ltd.
+ * Copyright (C) 2014-2017, Marvell International Ltd.
  *
  * This software file (the "File") is distributed by Marvell International
  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
@@ -86,7 +86,7 @@ allocSupplicantData(void *priv)
 	if (psapriv->suppData) {
 		return;
 	}
-	// if (pm_fns->bss_type == MLAN_BSS_TYPE_STA)
+	//if (pm_fns->bss_type == MLAN_BSS_TYPE_STA)
 	{
 
 //        int_sta = os_if_save_EnterCriticalSection();
@@ -159,9 +159,9 @@ keyMgmtSendDeauth2Peer(phostsa_private priv, UINT16 reason)
 	hostsa_mlan_fns *pm_fns = &priv->mlan_fns;
 
 	/* Assumes we are sending to AP */
-	// keyMgmtSendDeauth((cm_ConnectionInfo_t*)connPtr,
-	// &((cm_ConnectionInfo_t*)connPtr)->suppData->localBssid,
-	// reason);
+	//keyMgmtSendDeauth((cm_ConnectionInfo_t*)connPtr,
+	//                  &((cm_ConnectionInfo_t*)connPtr)->suppData->localBssid,
+	//                  reason);
 #if 0
 	ret = wlan_prepare_cmd(priv,
 			       HostCmd_CMD_802_11_DEAUTHENTICATE,
@@ -245,7 +245,7 @@ patch_ProcessRxEAPOL_GrpMsg1(phostsa_private priv, mlan_buffer *pmbuf,
 //    microTimerStop(pKeyMgmtInfoSta->rsnTimer);
 	util_fns->moal_stop_timer(util_fns->pmoal_handle,
 				  pKeyMgmtInfoSta->rsnTimer);
-	// pKeyMgmtInfoSta->rsnTimer = 0;
+	//pKeyMgmtInfoSta->rsnTimer = 0;
 
 	/* Decrypt the group key */
 	if (pKeyMsg->desc_type == 2) {
@@ -288,8 +288,10 @@ patch_ProcessRxEAPOL_PwkMsg3(phostsa_private priv, mlan_buffer *pmbuf,
 
 	/* look for group key once the pairwise has been plumbed */
 	if (pKeyMsg->key_info.EncryptedKeyData) {
-		/* I think the timer stop should be moved later on in case
-		   ramHook_Process_CCX_MFP_11r returns FALSE */
+		/* I think the timer stop should be moved later on
+		   in case ramHook_Process_CCX_MFP_11r returns
+		   FALSE
+		 */
 
 //        microTimerStop(pKeyMgmtInfoSta->rsnTimer);
 		util_fns->moal_stop_timer(util_fns->pmoal_handle,
@@ -338,6 +340,8 @@ GeneratePWKMsg2(phostsa_private priv, mlan_buffer *pmbuf,
 				   sizeof(ether_hdr_t));
 	struct supplicantData *suppData = priv->suppData;
 	pmlan_buffer newbuf = MNULL;
+	UINT8 intf_hr_len =
+		pm_fns->Hostsa_get_intf_hr_len(pm_fns->pmlan_private);
 
 	PRINTM(MMSG, "ENTER: %s\n", __FUNCTION__);
 
@@ -351,7 +355,7 @@ GeneratePWKMsg2(phostsa_private priv, mlan_buffer *pmbuf,
 		newbuf->in_ts_sec = pmbuf->in_ts_sec;
 		newbuf->in_ts_usec = pmbuf->in_ts_usec;
 		newbuf->data_offset =
-			(sizeof(TxPD) + INTF_HEADER_LEN + DMA_ALIGNMENT);
+			(sizeof(TxPD) + intf_hr_len + DMA_ALIGNMENT);
 	}
 
 	if (newbuf == NULL) {
@@ -410,6 +414,8 @@ GeneratePWKMsg4(phostsa_private priv, mlan_buffer *pmbuf,
 		(EAPOL_KeyMsg_t *)(pmbuf->pbuf + pmbuf->data_offset +
 				   sizeof(ether_hdr_t));
 	pmlan_buffer newbuf = MNULL;
+	UINT8 intf_hr_len =
+		pm_fns->Hostsa_get_intf_hr_len(pm_fns->pmlan_private);
 
 	PRINTM(MMSG, "Enter GeneratePWKMsg4\n");
 
@@ -423,7 +429,7 @@ GeneratePWKMsg4(phostsa_private priv, mlan_buffer *pmbuf,
 		newbuf->in_ts_sec = pmbuf->in_ts_sec;
 		newbuf->in_ts_usec = pmbuf->in_ts_usec;
 		newbuf->data_offset =
-			(sizeof(TxPD) + INTF_HEADER_LEN + DMA_ALIGNMENT);
+			(sizeof(TxPD) + intf_hr_len + DMA_ALIGNMENT);
 	}
 
 	if (newbuf == NULL) {
@@ -444,9 +450,10 @@ GeneratePWKMsg4(phostsa_private priv, mlan_buffer *pmbuf,
 						     EAPOL_PROTOCOL_V1, 0);
 
 	/* Set the BuffDesc free callback so the PSK supplicant can determine
-	   ** if the 4th message was successfully received by the AP.  Allows
-	   ** the supplicant to hold off switching/setting the new key until **
-	   it is sure the AP has acknowledged the handshake completion */
+	 **  if the 4th message was successfully received by the AP.  Allows
+	 **  the supplicant to hold off switching/setting the new key until
+	 **  it is sure the AP has acknowledged the handshake completion
+	 */
 #if 0
 	if (pKeyMgmtInfoSta->RSNDataTrafficEnabled) {
 		pBufDesc->isCB = 1;
@@ -487,6 +494,8 @@ GenerateGrpMsg2(phostsa_private priv, mlan_buffer *pmbuf,
 	UINT16 packet_len = 0;
 	struct supplicantData *suppData = priv->suppData;
 	pmlan_buffer newbuf = MNULL;
+	UINT8 intf_hr_len =
+		pm_fns->Hostsa_get_intf_hr_len(pm_fns->pmlan_private);
 
 	PRINTM(MMSG, "ENTER: %s\n", __FUNCTION__);
 
@@ -500,7 +509,7 @@ GenerateGrpMsg2(phostsa_private priv, mlan_buffer *pmbuf,
 		newbuf->in_ts_sec = pmbuf->in_ts_sec;
 		newbuf->in_ts_usec = pmbuf->in_ts_usec;
 		newbuf->data_offset =
-			(sizeof(TxPD) + INTF_HEADER_LEN + DMA_ALIGNMENT);
+			(sizeof(TxPD) + intf_hr_len + DMA_ALIGNMENT);
 	}
 
 	if (newbuf == NULL) {
@@ -551,7 +560,8 @@ KeyMgmtStaHsk_Recvd_PWKMsg1(phostsa_private priv, mlan_buffer *pmbuf,
 
 //#ifdef PSK_SUPPLICANT
 	/* Wait for supplicant data to be initialized, which will complete
-	   after set channel/DPD trainign is complete */
+	 * after set channel/DPD trainign is complete
+	 */
 	while (uMaxRetry-- && (suppData->suppInitialized != TRUE)) {
 //        OSATaskSleep(1);
 	}
@@ -625,9 +635,10 @@ KeyMgmtStaHsk_Recvd_PWKMsg1(phostsa_private priv, mlan_buffer *pmbuf,
 
 		retval = TRUE;
 
-		/* PMKID checking not used by embedded supplicant. **
-		   Commenting out the code in case it needs to be ** readded
-		   later. */
+		/* PMKID checking not used by embedded supplicant.
+		 ** Commenting out the code in case it needs to be
+		 ** readded later.
+		 */
 #if 0
 		/* Need to check for PMKID response */
 		if (pKeyMsg->desc_type == 2) {
@@ -645,11 +656,10 @@ KeyMgmtStaHsk_Recvd_PWKMsg1(phostsa_private priv, mlan_buffer *pmbuf,
 					      gcustomMIB_RSNConfig.PMKID,
 					      sizeof(gcustomMIB_RSNConfig.
 						     PMKID))) {
-					/* PMKID could be invalid if generated
-					   based on an ** old key. A new key
-					   should have been negotiated ** We
-					   should regenerate PMKID and check
-					   it. */
+					/* PMKID could be invalid if generated based on an
+					 ** old key. A new key should have been negotiated
+					 ** We should regenerate PMKID and check it.
+					 */
 				}
 			}
 		}
@@ -776,14 +786,14 @@ ProcessKeyMgmtDataSta(phostsa_private priv, mlan_buffer *pmbuf,
 			while ((KeyMgmtStaHsk_Recvd_PWKMsg1(priv, pmbuf, sa, da)
 				== FALSE)
 			       && (retry < PWK_MSG1_RETRIES)) {
-				/* Delay and retry Msg1 processing in case
-				   failure was ** due to the host not having
-				   time to program a PMK ** yet for 802.1x
-				   AKMPs */
-				// hal_WaitInUs(100);
+				/* Delay and retry Msg1 processing in case failure was
+				 **  due to the host not having time to program a PMK
+				 **  yet for 802.1x AKMPs
+				 */
+				//hal_WaitInUs(100);
 				retry++;
 			}
-			// KeyMgmtStaHsk_Recvd_PWKMsg1(priv, pmbuf, sa, da);
+			//KeyMgmtStaHsk_Recvd_PWKMsg1(priv, pmbuf, sa, da);
 
 		}
 	} else {
@@ -822,8 +832,9 @@ SendMICFailReport_sta(cm_ConnectionInfo_t * connPtr,
 
 	/* Since there is a MIC failure drop all packets in Tx queue. */
 	while ((pBufDesc = (BufferDesc_t *) getq(&wlan_data_q)) != NULL) {
-		/* Do nothing here. We are just dropping the packet ** and
-		   releasing the queue. */
+		/* Do nothing here. We are just dropping the packet
+		 **   and releasing the queue.
+		 */
 		mrvl_HandleTxDone(pBufDesc, 0);
 	}
 
@@ -913,16 +924,18 @@ supplicantMICCounterMeasureInvoke(cm_ConnectionInfo_t * connPtr,
 	if (pKeyMgmtInfoSta->sta_MIC_Error.MICCounterMeasureEnabled) {
 		state = pKeyMgmtInfoSta->sta_MIC_Error.status;
 
-		/* Watchdog and clear any pending TX packets to ensure that **
-		   We are able to get a TX buffer */
+		/* Watchdog and clear any pending TX packets to ensure that
+		 ** We are able to get a TX buffer
+		 */
 		tx_watchdog_recovery();
 		SendMICFailReport_sta(connPtr, pKeyMgmtInfoSta, isUnicast);
 
 		switch (state) {
 		case NO_MIC_FAILURE:
 			/* Received 1st MIC failure */
-			/* Noneed to check if timer is active. It will not be
-			   active ** cause this is the first state */
+			/* Noneed to check if timer is active. It will not be active
+			 ** cause this is the first state
+			 */
 			KeyMgmtSta_handleMICErr(state,
 						pKeyMgmtInfoSta,
 						MicErrTimerExp_Sta,
@@ -934,8 +947,7 @@ supplicantMICCounterMeasureInvoke(cm_ConnectionInfo_t * connPtr,
 			break;
 
 		case FIRST_MIC_FAIL_IN_60_SEC:
-			/* Received 2 MIC failures within 60 sec. Do deauth
-			   from AP */
+			/* Received 2 MIC failures within 60 sec. Do deauth from AP */
 			connPtr->suppData->customMIB_RSNStats.
 				TKIPCounterMeasuresInvoked++;
 
@@ -955,8 +967,9 @@ supplicantMICCounterMeasureInvoke(cm_ConnectionInfo_t * connPtr,
 			break;
 
 		case SECOND_MIC_FAIL_IN_60_SEC:
-			/* No need to do anything. Everything has been taken
-			   care of by ** the above state */
+			/*No need to do anything. Everything has been taken care of by
+			 ** the above state
+			 */
 
 		default:
 			break;
@@ -976,7 +989,7 @@ keyMgmtSta_StartSession(phostsa_private priv,
 	hostsa_util_fns *util_fns = &priv->util_fns;
 	keyMgmtInfoSta_t *pKeyMgmtInfoSta = &priv->suppData->keyMgmtInfoSta;
 
-	// pKeyMgmtInfoSta->psapriv = priv;
+	//pKeyMgmtInfoSta->psapriv = priv;
 
 	memcpy(util_fns, &priv->suppData->localStaAddr,
 	       pStaAddr, sizeof(priv->suppData->localStaAddr));
@@ -984,8 +997,8 @@ keyMgmtSta_StartSession(phostsa_private priv,
 	       pBssid, sizeof(priv->suppData->localBssid));
 
 	keyMgmtSta_StartSession_internal(priv, pKeyMgmtInfoSta,
-					 // keyMgmtStaRsnSecuredTimeoutHandler,
-					 RSNSECUREDTIMEOUT, 0);	// MICRO_TIMER_FLAG_KILL_ON_PS_ENTRY);
+					 //keyMgmtStaRsnSecuredTimeoutHandler,
+					 RSNSECUREDTIMEOUT, 0);	//MICRO_TIMER_FLAG_KILL_ON_PS_ENTRY);
 
 }
 
@@ -993,8 +1006,12 @@ void
 supplicantClrEncryptKey(void *priv)
 {
 	phostsa_private psapriv = (phostsa_private)priv;
-	hostsa_mlan_fns *pm_fns = &psapriv->mlan_fns;
+	hostsa_mlan_fns *pm_fns = NULL;
 
+	if (!psapriv)
+		return;
+
+	pm_fns = &psapriv->mlan_fns;
 	pm_fns->hostsa_clr_encrypt_key(psapriv->pmlan_private);
 }
 
@@ -1004,7 +1021,7 @@ keyApi_UpdateKeyMaterial(void *priv, key_MgtMaterial_t *keyMgtData_p)
 	phostsa_private psapriv = (phostsa_private)priv;
 	hostsa_util_fns *util_fns = &psapriv->util_fns;
 	hostsa_mlan_fns *pm_fns = &psapriv->mlan_fns;
-	// UINT8 wepKeyIndex;
+	//UINT8 wepKeyIndex;
 	mlan_ds_encrypt_key encrypt_key;
 	t_u8 bcast_addr[] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
 
@@ -1018,20 +1035,18 @@ keyApi_UpdateKeyMaterial(void *priv, key_MgtMaterial_t *keyMgtData_p)
 		/* The Key Info definition for TKIP and AES is the same */
 		if (keyMgtData_p->keyInfo & KEY_INFO_UNICAST) {
 			/* Unicast Key */
-			// SET_KEY_STATE_ENABLED(pwkey,
-			// (keyMgtData_p->keyInfo
-			// & KEY_INFO_ENABLED)? TRUE : FALSE);
-			// pwkey->hdr.keyType = keyMgtData_p->keyType;
-			// pwkey->hdr.keyDirection = KEY_DIRECTION_RXTX;
-			// pwkey->hdr.keyLen = keyMgtData_p->keyLen;
+			//SET_KEY_STATE_ENABLED(pwkey,
+			//                      (keyMgtData_p->keyInfo
+			//                        & KEY_INFO_ENABLED)? TRUE : FALSE);
+			//pwkey->hdr.keyType = keyMgtData_p->keyType;
+			//pwkey->hdr.keyDirection = KEY_DIRECTION_RXTX;
+			//pwkey->hdr.keyLen = keyMgtData_p->keyLen;
 
-			// if (IS_KEY_STATE_ENABLED(pwkey))
-			// {
-			// ramHook_keyApiSta_setConnDataTrafficEnabled(connPtr,
-			// TRUE);
-			// ramHook_keyApiSta_setConnCurPktTxEnabled(connPtr,
-			// TRUE);
-			// SET_KEY_STATE_FORCE_EAPOL_UNENCRYPTED(pwkey, TRUE);
+			//if (IS_KEY_STATE_ENABLED(pwkey))
+			//{
+			//    ramHook_keyApiSta_setConnDataTrafficEnabled(connPtr, TRUE);
+			//     ramHook_keyApiSta_setConnCurPktTxEnabled(connPtr, TRUE);
+			//     SET_KEY_STATE_FORCE_EAPOL_UNENCRYPTED(pwkey, TRUE);
 			// }
 			encrypt_key.key_flags |= KEY_FLAG_SET_TX_KEY;
 			encrypt_key.key_len = keyMgtData_p->keyLen;
@@ -1064,54 +1079,51 @@ keyApi_UpdateKeyMaterial(void *priv, key_MgtMaterial_t *keyMgtData_p)
 				       (uint8 *)keyMgtData_p->keyEncypt.AES.key,
 				       TK_SIZE);
 
-				/* duplicate to group key, for adhoc aes to
-				   use. */
-				// if (!IS_KEY_STATE_ENABLED(gwkey))
+				/* duplicate to group key,
+				 * for adhoc aes to use.
+				 */
+				//if (!IS_KEY_STATE_ENABLED(gwkey))
 				// {
 				/* Multicast Key */
-				// SET_KEY_STATE_ENABLED(gwkey,
-				// (keyMgtData_p->keyInfo
-				// & KEY_INFO_ENABLED) ? TRUE : FALSE);
-				// gwkey->hdr.keyType = keyMgtData_p->keyType;
-				// gwkey->hdr.keyDirection =
-				// KEY_DIRECTION_RXTX;
-				// gwkey->hdr.keyLen = keyMgtData_p->keyLen;
-				// if (IS_KEY_STATE_ENABLED(gwkey))
-				// {
-				// gwkey->ckd.tkip_aes.loReplayCounter16 = 0;
-				// gwkey->ckd.tkip_aes.hiReplayCounter32 =
-				// 0xffffffff;
-				// }
-				// memcpy((uint8*)gwkey->ckd.tkip_aes.key,
-				// (uint8*)keyMgtData_p->keyEncypt.AES.key,
-				// TK_SIZE);
+				//   SET_KEY_STATE_ENABLED(gwkey,
+				//                          (keyMgtData_p->keyInfo
+				//                          & KEY_INFO_ENABLED) ? TRUE : FALSE);
+				//   gwkey->hdr.keyType = keyMgtData_p->keyType;
+				//   gwkey->hdr.keyDirection = KEY_DIRECTION_RXTX;
+				//   gwkey->hdr.keyLen = keyMgtData_p->keyLen;
+				//    if (IS_KEY_STATE_ENABLED(gwkey))
+				//    {
+				//       gwkey->ckd.tkip_aes.loReplayCounter16 = 0;
+				//      gwkey->ckd.tkip_aes.hiReplayCounter32 = 0xffffffff;
+				//   }
+				//   memcpy((uint8*)gwkey->ckd.tkip_aes.key,
+				//         (uint8*)keyMgtData_p->keyEncypt.AES.key,
+				//         TK_SIZE);
 				// }
 			}
 		}
 
 		if (keyMgtData_p->keyInfo & KEY_INFO_MULTICAST) {
 			/* Multicast Key */
-			// SET_KEY_STATE_ENABLED(gwkey,
-			// (keyMgtData_p->
-			// keyInfo & KEY_INFO_ENABLED) ? TRUE :
-			// FALSE);
-			// gwkey->hdr.keyType = keyMgtData_p->keyType;
-			// gwkey->hdr.keyDirection = KEY_DIRECTION_RXTX;
-			// gwkey->hdr.keyLen = keyMgtData_p->keyLen;
-			// if (IS_KEY_STATE_ENABLED(gwkey))
-			// {
-			// gwkey->ckd.tkip_aes.loReplayCounter16 = 0;
-			// gwkey->ckd.tkip_aes.hiReplayCounter32 = 0xffffffff;
+			//SET_KEY_STATE_ENABLED(gwkey,
+			//                      (keyMgtData_p->
+			//                       keyInfo & KEY_INFO_ENABLED) ? TRUE :
+			//                      FALSE);
+			//gwkey->hdr.keyType = keyMgtData_p->keyType;
+			//gwkey->hdr.keyDirection = KEY_DIRECTION_RXTX;
+			//gwkey->hdr.keyLen = keyMgtData_p->keyLen;
+			//if (IS_KEY_STATE_ENABLED(gwkey))
+			//{
+			//     gwkey->ckd.tkip_aes.loReplayCounter16 = 0;
+			//    gwkey->ckd.tkip_aes.hiReplayCounter32 = 0xffffffff;
 
-			// if (!IS_KEY_STATE_ENABLED(pwkey))
-			// {
-			// gwkey->ckd.tkip_aes.txIV32 = 0x0;
-			// gwkey->ckd.tkip_aes.txIV16 = 0x1;
-			// ramHook_keyApiSta_setConnDataTrafficEnabled(connPtr,
-			// TRUE);
-			// ramHook_keyApiSta_setConnCurPktTxEnabled(connPtr,
-			// TRUE);
-			// }
+			//    if (!IS_KEY_STATE_ENABLED(pwkey))
+			//     {
+			//        gwkey->ckd.tkip_aes.txIV32 = 0x0;
+			//       gwkey->ckd.tkip_aes.txIV16 = 0x1;
+			//       ramHook_keyApiSta_setConnDataTrafficEnabled(connPtr, TRUE);
+			//      ramHook_keyApiSta_setConnCurPktTxEnabled(connPtr, TRUE);
+			//  }
 			// }
 			encrypt_key.key_flags |= KEY_FLAG_GROUP_KEY;
 			encrypt_key.key_len = keyMgtData_p->keyLen;
@@ -1149,7 +1161,7 @@ keyApi_UpdateKeyMaterial(void *priv, key_MgtMaterial_t *keyMgtData_p)
 	/**key flag*/
 		encrypt_key.key_flags |= KEY_FLAG_RX_SEQ_VALID;
 
-		// ramHook_keyApi_PalladiumHook1(connPtr);
+		//ramHook_keyApi_PalladiumHook1(connPtr);
 	/**set command to fw update key*/
 		pm_fns->hostsa_set_encrypt_key((void *)psapriv->pmlan_private,
 					       &encrypt_key);
@@ -1158,33 +1170,29 @@ keyApi_UpdateKeyMaterial(void *priv, key_MgtMaterial_t *keyMgtData_p)
 
 #ifndef WAR_ROM_BUG54733_PMF_SUPPORT
 	case KEY_TYPE_AES_CMAC:
-		if ( /* NULL != igwkey && */
+		if ( /*NULL != igwkey && */
 			(keyMgtData_p->keyInfo & KEY_INFO_MULTICAST_IGTK)) {
 			/* Multicast Key */
-			// SET_KEY_STATE_ENABLED(igwkey,
-			// (keyMgtData_p->keyInfo
-			// & KEY_INFO_ENABLED) ? TRUE : FALSE);
-			// igwkey->hdr.keyType = keyMgtData_p->keyType;
-			// igwkey->hdr.keyDirection = KEY_DIRECTION_RXTX;
-			// igwkey->hdr.keyLen = keyMgtData_p->keyLen;
+			//SET_KEY_STATE_ENABLED(igwkey,
+			//                                        (keyMgtData_p->keyInfo
+			//                                        & KEY_INFO_ENABLED) ? TRUE : FALSE);
+			//igwkey->hdr.keyType = keyMgtData_p->keyType;
+			//igwkey->hdr.keyDirection = KEY_DIRECTION_RXTX;
+			//igwkey->hdr.keyLen = keyMgtData_p->keyLen;
 			if (keyMgtData_p->keyLen) {
 				/* Update IPN if included */
-				// memcpy((UINT8
-				// *)&igwkey->ckd.tkip_aes.loReplayCounter16,
-				// (UINT8
-				// *)&key_p-ypt.iGTK.ipn[TK.ipn[0].ipn[0],
-				// sizeof(igwkey->ckd.tkip_aes.loReplayCounter16));
+				//memcpy((UINT8 *)&igwkey->ckd.tkip_aes.loReplayCounter16,
+				//              (UINT8 *)&keyMgtData_p->keyEncypt.iGTK.ipn[0],
+				//              sizeof(igwkey->ckd.tkip_aes.loReplayCounter16));
 
-				// memcpy((UINT8
-				// *)&igwkey->ckd.tkip_aes.hiReplayCounter32,
-				// (UINT8
-				// *)&key_p-ypt.iGTK.ipn[TK.ipn[2].ipn[2],
-				// sizeof(igwkey->ckd.tkip_aes.hiReplayCounter32));
+				//memcpy((UINT8 *)&igwkey->ckd.tkip_aes.hiReplayCounter32,
+				//              (UINT8 *)&keyMgtData_p->keyEncypt.iGTK.ipn[2],
+				//              sizeof(igwkey->ckd.tkip_aes.hiReplayCounter32));
 
 				/* Update key if included */
-				// memcpy((UINT8 *)igwkey->ckd.tkip_aes.key,
-				// (UINT8 *)keyMgtData_p->keyEncypt.iGTK.key,
-				// CRYPTO_AES_CMAC_KEY_LEN);
+				//memcpy((UINT8 *)igwkey->ckd.tkip_aes.key,
+				//         (UINT8 *)keyMgtData_p->keyEncypt.iGTK.key,
+				//         CRYPTO_AES_CMAC_KEY_LEN);
 				memcpy(util_fns,
 				       (uint8 *)encrypt_key.key_material,
 				       (UINT8 *)keyMgtData_p->keyEncypt.iGTK.
@@ -1196,7 +1204,7 @@ keyApi_UpdateKeyMaterial(void *priv, key_MgtMaterial_t *keyMgtData_p)
 			/**key flag*/
 			encrypt_key.key_flags |= KEY_FLAG_RX_SEQ_VALID;
 
-			// ramHook_keyApi_PalladiumHook1(connPtr);
+			//ramHook_keyApi_PalladiumHook1(connPtr);
 			/**set command to fw update key*/
 			pm_fns->hostsa_set_encrypt_key(psapriv->pmlan_private,
 						       &encrypt_key);
@@ -1312,7 +1320,7 @@ supplicantIsEnabled(void *priv)
 {
 	phostsa_private psapriv = (phostsa_private)priv;
 
-	if (psapriv->suppData == NULL) {
+	if (!psapriv || psapriv->suppData == NULL) {
 		return 0;
 	}
 
@@ -1344,7 +1352,7 @@ supplicantQueryPassphraseAndEnable(void *priv, t_u8 *pbuf)
 	mlan_ssid_bssid *ssid_bssid = (mlan_ssid_bssid *)pbuf;
 	mlan_802_11_ssid *pssid = &ssid_bssid->ssid;
 
-	if (psapriv->suppData == NULL)
+	if (!psapriv || psapriv->suppData == NULL)
 		return;
 	if (!ssid_bssid)
 		return;
@@ -1377,9 +1385,10 @@ supplicantSetAssocRsn(phostsa_private priv,
 	IEEEtypes_RSNCapability_t rsnCap;
 
 	if (pRsnCap == NULL) {
-		/* It is being added as an IOT workaround for APs that do not
-		   properly handle association requests that omit the RSN
-		   Capability field in the RSN IE */
+		/* It is being added as an IOT workaround for APs that
+		 * do not properly handle association requests that omit
+		 * the RSN Capability field in the RSN IE
+		 */
 		memset(util_fns, &rsnCap, 0x00, sizeof(rsnCap));
 		pRsnCap = &rsnCap;
 	}
@@ -1496,17 +1505,18 @@ void
 supplicantStopSessionTimer(void *priv)
 {
 	phostsa_private psapriv = (phostsa_private)priv;
-	hostsa_util_fns *util_fns = &psapriv->util_fns;
+	hostsa_util_fns *util_fns = NULL;
 
-	if (psapriv->suppData == NULL) {
+	if (!psapriv || psapriv->suppData == NULL) {
 		return;
 	}
 
+	util_fns = &psapriv->util_fns;
 	if (psapriv->suppData->keyMgmtInfoSta.rsnTimer) {
 		util_fns->moal_stop_timer(util_fns->pmoal_handle,
 					  psapriv->suppData->keyMgmtInfoSta.
 					  rsnTimer);
-		// priv->suppData->keyMgmtInfoSta.rsnTimer = 0;
+		//priv->suppData->keyMgmtInfoSta.rsnTimer = 0;
 	}
 }
 
@@ -1617,8 +1627,7 @@ keyMgmtSetIGtk(phostsa_private priv, keyMgmtInfoSta_t *pKeyMgmtInfoSta,
 	hostsa_util_fns *util_fns = &priv->util_fns;
 	UINT8 iGtkLen;
 
-	iGtkLen = iGtkKdeLen - 12;	/* OUI + dataType + keyId + IPN = 12
-					   bytes */
+	iGtkLen = iGtkKdeLen - 12;	/* OUI + dataType + keyId + IPN = 12 bytes */
 
 	memcpy(util_fns, &pKeyMgmtInfoSta->IGtk.Key,
 	       (UINT8 *)pIGtkKde->IGtk,
@@ -1713,7 +1722,7 @@ keyMgmtKeyGroupTxDone(phostsa_private priv)
 	chmgr_UnlockCh(connPtr, 0);
 #endif
 
-	// return NULL;
+	//return NULL;
 }
 
 static void
@@ -1841,8 +1850,7 @@ patch_supplicantParseRsnIe(phostsa_private priv, IEEEtypes_RSNElement_t *pRsnIe,
 
 		/* Check if the PMKID List is included */
 		if (pIeData < pIeEnd) {
-			/* pPMKIDList = pIeData; <-- Currently not used in
-			   parsing */
+			/* pPMKIDList = pIeData; <-- Currently not used in parsing */
 			pIeData += *pPMKIDCnt * sizeof(pRsnIe->PMKIDList);
 		}
 	}
@@ -1867,8 +1875,8 @@ void
 keyMgmtSta_RomInit(void)
 {
 //#if defined(PSK_SUPPLICANT) || defined (WPA_NONE)
-	// ramHook_keyMgmtProcessMsgExt = keyMgmtProcessMsgExt;
-	// ramHook_keyMgmtSendDeauth = keyMgmtSendDeauth2Peer;
+	//ramHook_keyMgmtProcessMsgExt = keyMgmtProcessMsgExt;
+	//ramHook_keyMgmtSendDeauth = keyMgmtSendDeauth2Peer;
 //#endif
 
 #ifdef WAR_ROM_BUG42707_RSN_IE_LEN_CHECK
@@ -2068,8 +2076,7 @@ supplicantParseAndFormatRsnIe(phostsa_private priv,
 
 		/* Check if the PMKID List is included */
 		if (pIeData < pIeEnd) {
-			/* pPMKIDList = pIeData; <-- Currently not used in
-			   parsing */
+			/* pPMKIDList = pIeData; <-- Currently not used in parsing */
 			pIeData += *pPMKIDCnt * sizeof(pRsnIe->PMKIDList);
 		}
 	}

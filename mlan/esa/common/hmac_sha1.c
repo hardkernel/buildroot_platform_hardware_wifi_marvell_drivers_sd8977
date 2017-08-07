@@ -2,7 +2,7 @@
  *
  *  @brief This file defines algorithm for hmac sha1
  *
- * Copyright (C) 2014-2016, Marvell International Ltd.
+ * Copyright (C) 2014-2017, Marvell International Ltd.
  *
  * This software file (the "File") is distributed by Marvell International
  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
@@ -37,12 +37,13 @@ Mrvl_hmac_sha1(void *priv, unsigned char **ppText,
 {
 	/*
 	   Note- Some of the variables are made static in this function
-	   becuase currently this function executes in the idle task. The idle
-	   task dosent have enough stack space to accomodate these varables.
-	   In the future if this function in executed in a different task or
-	   if we increase the stack size of the idle task then we can put
-	   these variables on the stack */
-	// BufferDesc_t * pDesc = NULL;
+	   becuase currently this function executes in the idle task.
+	   The idle task dosent have enough stack space to accomodate
+	   these varables. In the future if this function in executed in
+	   a different task or if we increase the stack size of the idle
+	   task then we can put these variables on the stack
+	 */
+	//BufferDesc_t * pDesc = NULL;
 	phostsa_private psapriv = (phostsa_private)priv;
 	hostsa_util_fns *util_fns = &psapriv->util_fns;
 	UINT8 buf[400] = { 0 };
@@ -155,8 +156,7 @@ Mrvl_PRF(void *priv, unsigned char *key, int key_len,
 			       1,
 			       key,
 			       key_len, &output[currentindex], MIN(20, remain));
-		currentindex += MIN(20, remain);	/* next concatenation
-							   location */
+		currentindex += MIN(20, remain);	/* next concatenation location */
 		remain -= 20;
 		prf_input[total_len - 1]++;	/* increment octet count */
 	}

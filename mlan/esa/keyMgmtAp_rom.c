@@ -2,7 +2,7 @@
  *
  *  @brief This file defines api for key managment
  *
- * Copyright (C) 2014-2016, Marvell International Ltd.
+ * Copyright (C) 2014-2017, Marvell International Ltd.
  *
  * This software file (the "File") is distributed by Marvell International
  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
@@ -148,7 +148,7 @@ GenerateGTK_internal(hostsa_private *priv, KeyData_t *grpKeyData,
 	hostsa_util_fns *util_fns = &priv->util_fns;
 	UINT8 inp_data[NONCE_SIZE + sizeof(IEEEtypes_MacAddr_t)];
 	UINT8 prefix[] = "Group key expansion";
-	UINT8 GTK[32];		// group transient key
+	UINT8 GTK[32];		//group transient key
 	UINT8 grpMasterKey[32];
 
 	if (!grpKeyData || !nonce) {
@@ -194,11 +194,11 @@ PopulateKeyMsg(hostsa_private *priv, EAPOL_KeyMsg_Tx_t *tx_eapol_ptr,
 	pKeyInfo = &tx_eapol_ptr->keyMsg.key_info;
 
 	if (Cipher->tkip) {
-		// TKIP unicast
+		//TKIP unicast
 		tx_eapol_ptr->keyMsg.key_length =
 			SHORT_SWAP((TK_SIZE + TK_SIZE));
 	} else if (Cipher->ccmp) {
-		// CCMP unicast
+		//CCMP unicast
 		tx_eapol_ptr->keyMsg.key_length = SHORT_SWAP(TK_SIZE);
 	}
 
@@ -493,7 +493,7 @@ keyMgmtAp_FormatWPARSN_IE_internal(phostsa_private priv,
 	pBuf[1] = 0x0;
 	pBuf += 2;
 
-	// filling group cipher
+	//filling group cipher
 	memcpy(util_fns, (void *)pBuf, (void *)&oui, sizeof(oui));
 
 	if (mcastBitmap) {

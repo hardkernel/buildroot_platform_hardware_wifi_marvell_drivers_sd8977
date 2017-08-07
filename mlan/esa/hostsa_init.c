@@ -2,7 +2,7 @@
  *
  *  @brief This file defines the initialize /free  APIs for authenticator and supplicant.
  *
- * Copyright (C) 2014-2016, Marvell International Ltd.
+ * Copyright (C) 2014-2017, Marvell International Ltd.
  *
  * This software file (the "File") is distributed by Marvell International
  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
@@ -413,9 +413,7 @@ Hostsa_set_mgmt_ie(t_void *pmlan_private, t_u8 *pbuf, t_u16 len, t_u8 clearIE)
 	pmgmt_ie = (custom_ie *)&pds_misc_cfg->param.cust_ie.ie_data_list[0];
 	pmgmt_ie->ie_index = 0xffff;	/* Auto index */
 	pmgmt_ie->ie_length = len;
-	pmgmt_ie->mgmt_subtype_mask = MBIT(8) | MBIT(5);	/* add IE for
-								   BEACON |
-								   PROBE_RSP */
+	pmgmt_ie->mgmt_subtype_mask = MBIT(8) | MBIT(5);	/* add IE for BEACON | PROBE_RSP */
 	if (clearIE)
 		pmgmt_ie->mgmt_subtype_mask = 0;
 	memcpy(pmadapter, pmgmt_ie->ie_buffer, pbuf, len);
@@ -431,7 +429,7 @@ Hostsa_set_mgmt_ie(t_void *pmlan_private, t_u8 *pbuf, t_u16 len, t_u8 clearIE)
 		PRINTM(MERROR,
 		       "%s(): Could not set IE for priv=%p [priv_bss_idx=%d]!\n",
 		       __func__, priv, priv->bss_index);
-		/* TODO: how to handle this error case?? ignore & continue? */
+		/* TODO: how to handle this error case??  ignore & continue? */
 	}
 	/* free ioctl buffer memory before we leave */
 	pmadapter->callbacks.moal_mfree(pmadapter->pmoal_handle,
@@ -485,6 +483,14 @@ Hostsa_get_bss_role(t_void *pmlan_private)
 	return GET_BSS_ROLE(pmpriv);
 }
 
+t_u8
+Hostsa_get_intf_hr_len(t_void *pmlan_private)
+{
+	mlan_private *pmpriv = (mlan_private *)pmlan_private;
+
+	return pmpriv->intf_hr_len;
+}
+
 /**
  *  @brief send event to moal to notice that 4 way handshake complete
  *
@@ -517,11 +523,10 @@ Hostsa_sendEventRsnConnect(t_void *pmlan_private, t_u8 *addr)
 
 	pevent->event_id = MLAN_EVENT_ID_DRV_PASSTHRU;
 	pevent->bss_index = pmpriv->bss_index;
-	event_cause = wlan_cpu_to_le32(0x51);	/* MICRO_AP_EV_ID_RSN_CONNECT */
+	event_cause = wlan_cpu_to_le32(0x51);	/*MICRO_AP_EV_ID_RSN_CONNECT */
 	memcpy(pmadapter, (t_u8 *)pevent->event_buf,
 	       (t_u8 *)&event_cause, sizeof(event_cause));
-	pos = pevent->event_buf + sizeof(event_cause) + 2;	/* reserved 2
-								   byte */
+	pos = pevent->event_buf + sizeof(event_cause) + 2;	/*reserved 2 byte */
 	memcpy(pmadapter, (t_u8 *)pos, addr, MLAN_MAC_ADDR_LENGTH);
 
 	pevent->event_len = MLAN_MAC_ADDR_LENGTH + sizeof(event_cause) + 2;
@@ -595,13 +600,14 @@ hostsa_mlan_callbacks(IN pmlan_private pmpriv,
 	pmlan_fns->Hostsa_StaControlledPortOpen = StaControlledPortOpen;
 	pmlan_fns->hostsa_StaSendDeauth = hostsa_StaSendDeauth;
 	pmlan_fns->Hostsa_get_bss_role = Hostsa_get_bss_role;
+	pmlan_fns->Hostsa_get_intf_hr_len = Hostsa_get_intf_hr_len;
 	pmlan_fns->Hostsa_sendEventRsnConnect = Hostsa_sendEventRsnConnect;
 };
 
 /**
  *  @brief Init hostsa data
  *
- *  @param pmlan_private   A pointer to mlan private data structure
+ *  @param pmpriv          A pointer to mlan_private structure
  *
  *  @return             MLAN_STATUS_SUCCESS or MLAN_STATUS_FAILURE
  */
@@ -625,7 +631,7 @@ hostsa_init(pmlan_private pmpriv)
 /**
  *  @brief Cleanup hostsa data
  *
- *  @param pmlan_private    A pointer to a mlan private data structure
+ *  @param pmpriv     A pointer to mlan_private structure
  *
  *  @return             MLAN_STATUS_SUCCESS or MLAN_STATUS_FAILURE
  */

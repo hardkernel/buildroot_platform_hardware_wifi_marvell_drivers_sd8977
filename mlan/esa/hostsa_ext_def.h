@@ -2,7 +2,7 @@
  *
  *  @brief This file declares the generic data structures and APIs.
  *
- *  Copyright (C) 2014-2016, Marvell International Ltd.
+ *  Copyright (C) 2014-2017, Marvell International Ltd.
  *
  *  This software file (the "File") is distributed by Marvell International
  *  Ltd. under the terms of the GNU General Public License Version 2, June 1991
@@ -220,14 +220,14 @@ typedef struct _mlan_buffer {
 /**Default group key handshake retry times*/
 #define GRP_HSK_RETRIES                 3
 /**Default pairwise key handshake timeout*/
-#define PWS_HSK_TIMEOUT                 100	// 100 ms
+#define PWS_HSK_TIMEOUT                 100	//100 ms
 /**Default group key handshake timeout*/
-#define GRP_HSK_TIMEOUT                 100	// 100 ms
+#define GRP_HSK_TIMEOUT                 100	//100 ms
 /**Default Group key rekey time*/
-#define GRP_REKEY_TIME                  86400	// 86400 sec
+#define GRP_REKEY_TIME                  86400	//86400 sec
 
 /** Maximum value of 4 byte configuration */
-#define MAX_VALID_DWORD         0x7FFFFFFF	/* (1 << 31) - 1 */
+#define MAX_VALID_DWORD         0x7FFFFFFF	/*  (1 << 31) - 1 */
 
 /** Band config ACS mode */
 #define BAND_CONFIG_ACS_MODE    0x40
@@ -293,8 +293,6 @@ typedef struct _mlan_buffer {
 #define DMA_ALIGNMENT            64
 /** max size of TxPD */
 #define MAX_TXPD_SIZE            32
-/** Interface header length */
-#define INTF_HEADER_LEN     4
 
 typedef t_u8 mlan_802_11_mac_addr[MLAN_MAC_ADDR_LENGTH];
 

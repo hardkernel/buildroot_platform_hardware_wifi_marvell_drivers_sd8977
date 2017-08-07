@@ -2,7 +2,7 @@
   *
   * @brief This file contains wireless extension standard ioctl functions
   *
-  * Copyright (C) 2010-2016, Marvell International Ltd.
+  * Copyright (C) 2010-2017, Marvell International Ltd.
   *
   * This software file (the "File") is distributed by Marvell International
   * Ltd. under the terms of the GNU General Public License Version 2, June 1991
@@ -324,8 +324,8 @@ woal_set_freq(struct net_device *dev, struct iw_request_info *info,
 	}
 	i = ap_cfg->num_of_chan;
 
-	/* Initialize the invalid values so that the correct values below are
-	   downloaded to firmware */
+	/* Initialize the invalid values so that the correct values
+	 * below are downloaded to firmware */
 	woal_set_sys_config_invalid_data(sys_cfg);
 
 	/* If setting by frequency, convert to a channel */
@@ -394,7 +394,7 @@ woal_get_freq(struct net_device *dev, struct iw_request_info *info,
 		return -EFAULT;
 	}
 
-	band = ap_cfg.band_cfg & BAND_CONFIG_5GHZ;
+	band = (ap_cfg.bandcfg.chanBand == BAND_5GHZ);
 	fwrq->m = (long)channel_to_frequency(ap_cfg.channel, band);
 	fwrq->i = (long)ap_cfg.channel;
 	fwrq->e = 6;
@@ -507,8 +507,8 @@ woal_set_encode(struct net_device *dev, struct iw_request_info *info,
 		goto done;
 	}
 
-	/* Initialize the invalid values so that the correct values below are
-	   downloaded to firmware */
+	/* Initialize the invalid values so that the correct values
+	 * below are downloaded to firmware */
 	woal_set_sys_config_invalid_data(sys_cfg);
 	sys_cfg->wep_cfg.key0.key_index = 0;
 	sys_cfg->wep_cfg.key1.key_index = 1;
@@ -543,8 +543,7 @@ woal_set_encode(struct net_device *dev, struct iw_request_info *info,
 				pkey = &sys_cfg->wep_cfg.key2;
 			if (ap_cfg->wep_cfg.key3.is_default)
 				pkey = &sys_cfg->wep_cfg.key3;
-			else {	/* Something wrong, select first key as default
-				 */
+			else {	/* Something wrong, select first key as default */
 				PRINTM(MERROR,
 				       "No default key set! Selecting first key.\n");
 				pkey = &sys_cfg->wep_cfg.key0;
@@ -772,8 +771,8 @@ woal_set_gen_ie(struct net_device *dev, struct iw_request_info *info,
 
 	ENTER();
 
-	/* Initialize the invalid values so that the correct values below are
-	   downloaded to firmware */
+	/* Initialize the invalid values so that the correct values
+	 * below are downloaded to firmware */
 	woal_set_sys_config_invalid_data(&sys_cfg);
 
 	tlv_buf_left = dwrq->length;
@@ -912,8 +911,8 @@ woal_set_encode_ext(struct net_device *dev,
 		goto done;
 	}
 
-	/* Initialize the invalid values so that the correct values below are
-	   downloaded to firmware */
+	/* Initialize the invalid values so that the correct values
+	 * below are downloaded to firmware */
 	woal_set_sys_config_invalid_data(&sys_cfg);
 
 	pkey_material = (t_u8 *)(ext + 1);
@@ -1063,8 +1062,9 @@ woal_set_mlme(struct net_device *dev,
 		       MAC2STR(sta_addr), mlme->reason_code);
 
 		/* FIXME: For flushing all stations we need to use zero MAC,
-		   but right now the FW does not support this. So, manually
-		   delete each one individually. */
+		 * but right now the FW does not support this. So, manually
+		 * delete each one individually.
+		 */
 		/* If deauth all station, get the connected STA list first */
 		if (!memcmp(bc_addr, sta_addr, ETH_ALEN)) {
 			PRINTM(MIOCTL, "Deauth all stations\n");
@@ -1159,8 +1159,8 @@ woal_set_auth(struct net_device *dev, struct iw_request_info *info,
 
 	ENTER();
 
-	/* Initialize the invalid values so that the correct values below are
-	   downloaded to firmware */
+	/* Initialize the invalid values so that the correct values
+	 * below are downloaded to firmware */
 	woal_set_sys_config_invalid_data(&sys_cfg);
 
 	switch (vwrq->flags & IW_AUTH_INDEX) {
@@ -1454,7 +1454,7 @@ woal_get_range(struct net_device *dev, struct iw_request_info *info,
 
 	for (i = 0; i < range->num_frequency; i++) {
 		range->freq[i].i = (long)ap_cfg.chan_list[i].chan_number;
-		band = ap_cfg.chan_list[i].band_config_type & BAND_CONFIG_5GHZ;
+		band = (ap_cfg.chan_list[i].bandcfg.chanBand == BAND_5GHZ);
 		range->freq[i].m =
 			(long)channel_to_frequency(ap_cfg.chan_list[i].
 						   chan_number, band) * 100000;
@@ -1492,7 +1492,7 @@ woal_get_range(struct net_device *dev, struct iw_request_info *info,
 /** Maximum power period */
 #define IW_POWER_PERIOD_MAX 120000000	/* 2 min */
 /** Minimum power timeout value */
-#define IW_POWER_TIMEOUT_MIN 1000	/* 1 ms */
+#define IW_POWER_TIMEOUT_MIN 1000	/* 1 ms  */
 /** Maximim power timeout value */
 #define IW_POWER_TIMEOUT_MAX 1000000	/* 1 sec */
 
@@ -1585,8 +1585,8 @@ woal_set_essid(struct net_device *dev, struct iw_request_info *info,
 		goto done;
 	}
 
-	/* Initialize the invalid values so that the correct values below are
-	   downloaded to firmware */
+	/* Initialize the invalid values so that the correct values
+	 * below are downloaded to firmware */
 	woal_set_sys_config_invalid_data(&sys_cfg);
 
 	/* Set the SSID */
@@ -1703,7 +1703,7 @@ static const iw_handler woal_handler[] = {
 	(iw_handler) woal_set_wap,	/* SIOCSIWAP */
 	(iw_handler) woal_get_wap,	/* SIOCGIWAP */
 #if WIRELESS_EXT >= 18
-	(iw_handler) woal_set_mlme,	/* SIOCSIWMLME */
+	(iw_handler) woal_set_mlme,	/* SIOCSIWMLME  */
 #else
 	(iw_handler) NULL,	/* -- hole -- */
 #endif
@@ -1741,8 +1741,8 @@ static const iw_handler woal_handler[] = {
 	(iw_handler) NULL,	/* -- hole -- */
 	(iw_handler) woal_set_gen_ie,	/* SIOCSIWGENIE */
 	(iw_handler) woal_get_gen_ie,	/* SIOCGIWGENIE */
-	(iw_handler) woal_set_auth,	/* SIOCSIWAUTH */
-	(iw_handler) woal_get_auth,	/* SIOCGIWAUTH */
+	(iw_handler) woal_set_auth,	/* SIOCSIWAUTH  */
+	(iw_handler) woal_get_auth,	/* SIOCGIWAUTH  */
 	(iw_handler) woal_set_encode_ext,	/* SIOCSIWENCODEEXT */
 	(iw_handler) woal_get_encode_ext,	/* SIOCGIWENCODEEXT */
 #endif /* WIRELESSS_EXT >= 18 */
@@ -1783,10 +1783,11 @@ struct iw_statistics *
 woal_get_uap_wireless_stats(struct net_device *dev)
 {
 	moal_private *priv = (moal_private *)netdev_priv(dev);
-	t_u16 wait_option = MOAL_NO_WAIT;
+	t_u16 wait_option = MOAL_WSTATS_WAIT;
 
 	ENTER();
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 31)
 	/*
 	 * Since schedule() is not allowed from an atomic context
 	 * such as when dev_base_lock for netdevices is acquired
@@ -1794,9 +1795,9 @@ woal_get_uap_wireless_stats(struct net_device *dev)
 	 * is issued in non-blocking way in such contexts and
 	 * blocking in other cases.
 	 */
-	if (write_can_lock(&dev_base_lock)
-	    && (!in_atomic() || current->exit_state))
-		wait_option = MOAL_WSTATS_WAIT;
+	if (in_atomic() || !write_can_lock(&dev_base_lock))
+		wait_option = MOAL_NO_WAIT;
+#endif
 
 	priv->w_stats.qual.qual = 0;
 	priv->w_stats.qual.level = 0;

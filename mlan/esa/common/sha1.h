@@ -2,7 +2,7 @@
  *
  *  @brief This file contains the sha1 functions
  *
- * Copyright (C) 2014-2016, Marvell International Ltd.
+ * Copyright (C) 2014-2017, Marvell International Ltd.
  *
  * This software file (the "File") is distributed by Marvell International
  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
@@ -41,17 +41,19 @@ enum {
  *  hashing operation
  */
 typedef struct {
-	UINT32 Intermediate_Hash[A_SHA_DIGEST_LEN / 4];	/* Message Digest */
+	UINT32 Intermediate_Hash[A_SHA_DIGEST_LEN / 4];	/* Message Digest  */
 
-	UINT32 Length_Low;	/* Message length in bits */
-	UINT32 Length_High;	/* Message length in bits */
+	UINT32 Length_Low;	/* Message length in bits      */
+	UINT32 Length_High;	/* Message length in bits      */
 
-	UINT32 Scratch[16];	/* This is used to reduce the memory **
-				   requirements of the transform **function */
-	UINT8 Message_Block[64];	/* 512-bit message blocks */
-	/* Index into message block array */
+	UINT32 Scratch[16];	/* This is used to reduce the memory
+				 ** requirements of the transform
+				 **function
+				 */
+	UINT8 Message_Block[64];	/* 512-bit message blocks      */
+	/* Index into message block array   */
 	SINT16 Message_Block_Index;
-	UINT8 Computed;		/* Is the digest computed? */
+	UINT8 Computed;		/* Is the digest computed?         */
 	UINT8 Corrupted;	/* Is the message digest corrupted? */
 } Mrvl_SHA1_CTX;
 

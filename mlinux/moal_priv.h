@@ -3,7 +3,7 @@
  *
  * @brief This file contains definition for extended private IOCTL call.
  *
- * Copyright (C) 2008-2016, Marvell International Ltd.
+ * Copyright (C) 2008-2017, Marvell International Ltd.
  *
  * This software file (the "File") is distributed by Marvell International
  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
@@ -32,8 +32,7 @@ Change log:
 #define WOAL_2K_BYTES       2000
 
 /** PRIVATE CMD ID */
-#define WOAL_IOCTL                  (SIOCIWFIRSTPRIV)	/* 0x8BE0 defined in
-							   wireless.h */
+#define WOAL_IOCTL                  (SIOCIWFIRSTPRIV)	/* 0x8BE0 defined in wireless.h */
 
 /** Private command ID to set one int/get word char */
 #define WOAL_SETONEINT_GETWORDCHAR  (WOAL_IOCTL + 1)
@@ -80,6 +79,8 @@ Change log:
 #endif
 /** Private command ID to set/get beacon interval */
 #define WOAL_BEACON_INTERVAL        3
+/** Private command ID to set/get ATIM window */
+#define WOAL_ATIM_WINDOW            4
 /** Private command ID to get RSSI */
 #define WOAL_SIGNAL                 5
 /** Private command ID to set/get Deep Sleep mode */
@@ -178,14 +179,10 @@ Change log:
 #endif
 /** Private command ID for set/get 11h local power constraint */
 #define WOAL_SET_GET_11H_LOCAL_PWR_CONSTRAINT 22
-/** Private command ID to set/get 11N HT stream configuration */
-#define WOAL_HT_STREAM_CFG          23
 /** Private command ID to set/get MAC control */
 #define WOAL_MAC_CONTROL            24
 /** Private command ID to get thermal value */
 #define WOAL_THERMAL                25
-/** Private command ID to set/get hs cfg param */
-#define WOAL_CFG_HOTSPOT            26
 
 /** Private command ID to get log */
 #define WOALGETLOG                  (WOAL_IOCTL + 7)
@@ -209,8 +206,6 @@ Change log:
 #define WOAL_IP_ADDRESS             7
 /** Private command ID to set/get TX bemaforming */
 #define WOAL_TX_BF_CFG              8
-/** Private command ID to get PTK/GTK */
-#define WOAL_GET_KEY                9
 
 /** Get log buffer size */
 #define GETLOG_BUFSIZE              512
@@ -398,11 +393,6 @@ static const struct iw_priv_args woal_private_args[] = {
 	 IW_PRIV_TYPE_INT | 1,
 	 "powercons"},
 	{
-	 WOAL_HT_STREAM_CFG,
-	 IW_PRIV_TYPE_INT | 1,
-	 IW_PRIV_TYPE_INT | 1,
-	 "htstreamcfg"},
-	{
 	 WOAL_MAC_CONTROL,
 	 IW_PRIV_TYPE_INT | 1,
 	 IW_PRIV_TYPE_INT | 1,
@@ -412,11 +402,6 @@ static const struct iw_priv_args woal_private_args[] = {
 	 IW_PRIV_TYPE_INT | 1,
 	 IW_PRIV_TYPE_INT | 1,
 	 "thermal"},
-	{
-	 WOAL_CFG_HOTSPOT,
-	 IW_PRIV_TYPE_INT | 1,
-	 IW_PRIV_TYPE_INT | 1,
-	 "hotspotcfg"},
 	{
 	 WOAL_SET_GET_SIXTEEN_INT,
 	 IW_PRIV_TYPE_INT | 16,
@@ -439,6 +424,11 @@ static const struct iw_priv_args woal_private_args[] = {
 	 IW_PRIV_TYPE_INT | 16,
 	 IW_PRIV_TYPE_INT | 16,
 	 "bcninterval"},
+	{
+	 WOAL_ATIM_WINDOW,
+	 IW_PRIV_TYPE_INT | 16,
+	 IW_PRIV_TYPE_INT | 16,
+	 "atimwindow"},
 	{
 	 WOAL_SIGNAL,
 	 IW_PRIV_TYPE_INT | 16,
@@ -609,11 +599,6 @@ static const struct iw_priv_args woal_private_args[] = {
 	 IW_PRIV_TYPE_CHAR | 256,
 	 IW_PRIV_TYPE_CHAR | 256,
 	 "adhocaes"},
-	{
-	 WOAL_GET_KEY,
-	 IW_PRIV_TYPE_CHAR | 256,
-	 IW_PRIV_TYPE_CHAR | 256,
-	 "getkey"},
 	{
 	 WOAL_ASSOCIATE,
 	 IW_PRIV_TYPE_CHAR | 256,

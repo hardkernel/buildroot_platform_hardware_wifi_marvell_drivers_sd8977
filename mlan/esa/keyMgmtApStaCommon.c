@@ -2,7 +2,7 @@
  *
  *  @brief This file defines common api for authenticator and supplicant.
  *
- * Copyright (C) 2014-2016, Marvell International Ltd.
+ * Copyright (C) 2014-2017, Marvell International Ltd.
  *
  * This software file (the "File") is distributed by Marvell International
  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
@@ -118,14 +118,15 @@ void
 supplicantGenerateRand(hostsa_private *priv, UINT8 *dataOut, UINT32 length)
 {
 	UINT32 i;
-	// UINT32 valueHi, valueLo;
+	//UINT32 valueHi, valueLo;
 
-	/* Read mac 0 timer. ** Doesn't matter which one we read. We just need
-	   a good seed. */
-	// msi_wl_GetMCUCoreTimerTxTSF(&valueHi, &valueLo);
-	// srand(valueLo);
+	/* Read mac 0 timer.
+	 ** Doesn't matter which one we read. We just need a good seed.
+	 */
+	//msi_wl_GetMCUCoreTimerTxTSF(&valueHi, &valueLo);
+	//srand(valueLo);
 	for (i = 0; i < length; i++) {
-		// dataOut[i] = rand();
+		//dataOut[i] = rand();
 		dataOut[i] = rand_new(srand_new(priv), i + 1);
 	}
 }
@@ -143,8 +144,7 @@ SetEAPOLKeyDescTypeVersion(EAPOL_KeyMsg_Tx_t *pTxEapol,
 	}
 
 	if (isKDF) {
-		/* 802.11r and 802.11w use SHA256-KDF and a different
-		   KeyDescVer */
+		/* 802.11r and 802.11w use SHA256-KDF and a different KeyDescVer */
 		pTxEapol->keyMsg.key_info.KeyDescriptorVersion = 3;
 	} else if (nonTKIP) {
 		/* CCMP */
@@ -166,7 +166,8 @@ ComputeEAPOL_MIC(phostsa_private priv, EAPOL_KeyMsg_t *pKeyMsg,
 	pMicData = (UINT8 *)pKeyMsg;
 
 	/* Allow the caller to override the algorithm used to get by some Cisco
-	   ** CCX bugs where the wrong MIC algorithm is used */
+	 **    CCX bugs where the wrong MIC algorithm is used
+	 */
 	if (micKeyDescVersion == 0) {
 		/* Algorithm not specified, use proper one from key_info */
 		micKeyDescVersion = pKeyMsg->key_info.KeyDescriptorVersion;
@@ -191,7 +192,7 @@ ComputeEAPOL_MIC(phostsa_private priv, EAPOL_KeyMsg_t *pKeyMsg,
 
 	default:
 	case 1:
-		/* TKIP or WEP */
+		/* TKIP  or WEP */
 		Mrvl_hmac_md5((t_void *)priv, pMicData,
 			      data_length,
 			      MIC_Key,
@@ -269,7 +270,7 @@ KeyMgmtSta_PopulateEAPOLLengthMic(phostsa_private priv,
 {
 	UINT16 frameLen;
 
-#if 0				// !defined(REMOVE_PATCH_HOOKS)
+#if 0				//!defined(REMOVE_PATCH_HOOKS)
 	if (KeyMgmtSta_PopulateEAPOLLengthMic_hook(pTxEapol,
 						   pEAPOLMICKey,
 						   eapolProtocolVersion,
@@ -314,13 +315,16 @@ KeyMgmt_DerivePTK(phostsa_private priv, UINT8 *pAddr1,
 	UINT8 *pContext;
 	char *prefix;
 
-	/* pPTK is expected to be an encryption pool buffer (at least 500
-	   bytes). ** ** Use the first portion for the ptk output.  Use memory
-	   in the end of ** the buffer for the context construction (76 bytes).
-	   ** ** The sha256 routine assumes available memory after the context
-	   for its ** own sha256 output.  Space after the context (76 bytes) is
-	   required ** for 2 digests (2 * 32).  pContext must have at least 76 +
-	   64 bytes ** available. */
+	/* pPTK is expected to be an encryption pool buffer (at least 500 bytes).
+	 **
+	 ** Use the first portion for the ptk output.  Use memory in the end of
+	 **   the buffer for the context construction (76 bytes).
+	 **
+	 ** The sha256 routine assumes available memory after the context for its
+	 **   own sha256 output.  Space after the context (76 bytes) is required
+	 **   for 2 digests (2 * 32).  pContext must have at least 76 + 64 bytes
+	 **   available.
+	 */
 	pContext = pPTK + 200;
 
 	supplicantConstructContext(priv, pAddr1, pAddr2, pNonce1, pNonce2,
@@ -329,14 +333,11 @@ KeyMgmt_DerivePTK(phostsa_private priv, UINT8 *pAddr1,
 	prefix = "Pairwise key expansion";
 
 	if (use_kdf) {
-		mrvl_sha256_crypto_kdf((t_void *)priv, pPMK, PMK_LEN_MAX, prefix, 22,	/* strlen(prefix)
-											 */
-				       pContext, 76,	/* sizeof constructed
-							   context */
+		mrvl_sha256_crypto_kdf((t_void *)priv, pPMK, PMK_LEN_MAX, prefix, 22,	/* strlen(prefix) */
+				       pContext, 76,	/* sizeof constructed context */
 				       pPTK, 384);
 	} else {
-		Mrvl_PRF((void *)priv, pPMK, PMK_LEN_MAX, (UINT8 *)prefix, 22,	/* strlen(prefix)
-										 */
+		Mrvl_PRF((void *)priv, pPMK, PMK_LEN_MAX, (UINT8 *)prefix, 22,	/* strlen(prefix) */
 			 pContext, 76,	/* sizeof constructed context */
 			 pPTK, 64);
 	}
@@ -354,8 +355,8 @@ KeyMgmtSta_DeriveKeys(hostsa_private *priv, UINT8 *pPMK,
 {
 	hostsa_util_fns *util_fns = &priv->util_fns;
 //    phostsa_private psapriv = (phostsa_private) priv;
-	// hostsa_util_fns *util_fns = &psapriv->util_fns;
-	// BufferDesc_t* pBufDesc = NULL;
+	//   hostsa_util_fns  *util_fns = &psapriv->util_fns;
+	//BufferDesc_t* pBufDesc = NULL;
 	UINT8 buf[500] = { 0 };
 	TkipPtk_t *pPtk;
 
@@ -463,7 +464,7 @@ supplicantParseWpaIe(phostsa_private priv, IEEEtypes_WPAElement_t *pIe,
 		pMcstCipher->wep104 = 1;
 	}
 
-	count = pTemp->PwsKeyCnt;
+	count = wlan_le16_to_cpu(pTemp->PwsKeyCnt);
 
 	while (count) {
 		/* record the AP's unicast cipher */
@@ -485,7 +486,7 @@ supplicantParseWpaIe(phostsa_private priv, IEEEtypes_WPAElement_t *pIe,
 		}
 	}
 
-	count = pTemp->AuthKeyCnt;
+	count = wlan_le16_to_cpu(pTemp->AuthKeyCnt);
 
 	while (count) {
 		if (akmCount) {
@@ -584,6 +585,7 @@ supplicantParseRsnIe(phostsa_private priv, IEEEtypes_RSNElement_t *pRsnIe,
 	IEEEtypes_RSNCapability_t *pRsnCap;
 
 	UINT16 *pPMKIDCnt;
+	UINT16 PMKIDCnt;
 
 	UINT8 *pGrpMgmtCipher;
 #if 0
@@ -616,7 +618,7 @@ supplicantParseRsnIe(phostsa_private priv, IEEEtypes_RSNElement_t *pRsnIe,
 	supplicantParseMcstCipher(priv, pMcstCipherOut, pGrpKeyCipher);
 
 	/* Parse the pairwise key cipher list */
-	memcpy(util_fns, &pwsKeyCnt, pIeData, sizeof(pwsKeyCnt));
+	pwsKeyCnt = wlan_le16_to_cpu(*(UINT16 *)pIeData);
 	pIeData += sizeof(pRsnIe->PwsKeyCnt);
 
 	pPwsKeyCipherList = pIeData;
@@ -625,7 +627,7 @@ supplicantParseRsnIe(phostsa_private priv, IEEEtypes_RSNElement_t *pRsnIe,
 				  pPwsKeyCipherList);
 
 	/* Parse and return the AKM list */
-	memcpy(util_fns, &authKeyCnt, pIeData, sizeof(authKeyCnt));
+	authKeyCnt = wlan_le16_to_cpu(*(UINT16 *)pIeData);
 	pIeData += sizeof(pRsnIe->AuthKeyCnt);
 
 	pAuthKeyList = pIeData;
@@ -655,13 +657,13 @@ supplicantParseRsnIe(phostsa_private priv, IEEEtypes_RSNElement_t *pRsnIe,
 	/* Check if the PMKID count is included */
 	if (pIeData < pIeEnd) {
 		pPMKIDCnt = (UINT16 *)pIeData;
+		PMKIDCnt = wlan_le16_to_cpu(*pPMKIDCnt);
 		pIeData += sizeof(pRsnIe->PMKIDCnt);
 
 		/* Check if the PMKID List is included */
 		if (pIeData < pIeEnd) {
-			/* pPMKIDList = pIeData; <-- Currently not used in
-			   parsing */
-			pIeData += *pPMKIDCnt * sizeof(pRsnIe->PMKIDList);
+			/* pPMKIDList = pIeData; <-- Currently not used in parsing */
+			pIeData += PMKIDCnt * sizeof(pRsnIe->PMKIDList);
 		}
 	}
 

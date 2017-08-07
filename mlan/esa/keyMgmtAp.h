@@ -2,7 +2,7 @@
  *
  *  @brief This file contains the eapol paket process and key management for authenticator
  *
- * Copyright (C) 2014-2016, Marvell International Ltd.
+ * Copyright (C) 2014-2017, Marvell International Ltd.
  *
  * This software file (the "File") is distributed by Marvell International
  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
@@ -29,8 +29,8 @@ Change log:
 #include "wltypes.h"
 #include "keyMgmtAp_rom.h"
 
-#define STA_PS_EAPOL_HSK_TIMEOUT 3000	// ms
-#define AP_RETRY_EAPOL_HSK_TIMEOUT 1000	// ms
+#define STA_PS_EAPOL_HSK_TIMEOUT 3000	//ms
+#define AP_RETRY_EAPOL_HSK_TIMEOUT 1000	//ms
 
 extern void KeyMgmtInit(void *priv);
 extern void ReInitGTK(void *priv);
@@ -61,4 +61,4 @@ extern t_u16 keyMgmtAp_FormatWPARSN_IE(void *priv,
 				       UINT8 cipherCount,
 				       Cipher_t *pMcastCipher,
 				       UINT16 authKey, UINT16 authKeyCount);
-#endif // _KEYMGMTAP_H_
+#endif //_KEYMGMTAP_H_

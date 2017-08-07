@@ -2,7 +2,7 @@
  *
  *  @brief This file declares the generic data structures and APIs.
  *
- *  Copyright (C) 2008-2016, Marvell International Ltd.
+ *  Copyright (C) 2008-2017, Marvell International Ltd.
  *
  *  This software file (the "File") is distributed by Marvell International
  *  Ltd. under the terms of the GNU General Public License Version 2, June 1991
@@ -27,7 +27,7 @@ Change log:
 #define _MLAN_DECL_H_
 
 /** MLAN release version */
-#define MLAN_RELEASE_VERSION		 "C200"
+#define MLAN_RELEASE_VERSION		 "C248"
 
 /** Re-define generic data types for MLAN/MOAL */
 /** Signed char (1-byte) */
@@ -146,20 +146,8 @@ typedef t_s32 t_sval;
 /** This is current limit on Maximum Tx AMPDU allowed */
 #define MLAN_MAX_TX_BASTREAM_SUPPORTED          16
 #define MLAN_MAX_TX_BASTREAM_DEFAULT            2
-#define MLAN_MAX_TX_BASTREAM_SUPPORTED_NOV15    2
 /** This is current limit on Maximum Rx AMPDU allowed */
 #define MLAN_MAX_RX_BASTREAM_SUPPORTED     16
-
-/** station ampdu tx win size */
-#define MLAN_STA_AMPDU_DEF_TXWINSIZE_NOV15      32
-/** uap ampdu tx win size */
-#define MLAN_UAP_AMPDU_DEF_TXWINSIZE_NOV15      32
-/** uap ampdu rx win size */
-#define MLAN_UAP_AMPDU_DEF_RXWINSIZE_NOV15      32
-#ifdef WIFI_DIRECT_SUPPORT
-/** wfd ampdu tx/rx win size */
-#define MLAN_WFD_AMPDU_DEF_TXRXWINSIZE_NOV15    32
-#endif
 
 #ifdef STA_SUPPORT
 /** Default Win size attached during ADDBA request */
@@ -211,14 +199,10 @@ typedef t_s32 t_sval;
 #define MLAN_RATE_INDEX_MCS7    7
 /** Rate index for MCS 9 */
 #define MLAN_RATE_INDEX_MCS9    9
-/** Rate index for MCS15 */
-#define MLAN_RATE_INDEX_MCS15   15
 /** Rate index for MCS 32 */
 #define MLAN_RATE_INDEX_MCS32   32
 /** Rate index for MCS 127 */
 #define MLAN_RATE_INDEX_MCS127  127
-#define MLAN_RATE_NSS1          1
-#define MLAN_RATE_NSS2          2
 
 /** Rate bitmap for OFDM 0 */
 #define MLAN_RATE_BITMAP_OFDM0  16
@@ -228,10 +212,6 @@ typedef t_s32 t_sval;
 #define MLAN_RATE_BITMAP_MCS0   32
 /** Rate bitmap for MCS 127 */
 #define MLAN_RATE_BITMAP_MCS127 159
-#define MLAN_RATE_BITMAP_NSS1_MCS0 160
-#define MLAN_RATE_BITMAP_NSS1_MCS9 169
-#define MLAN_RATE_BITMAP_NSS2_MCS0 176
-#define MLAN_RATE_BITMAP_NSS2_MCS9 185
 
 /** Size of rx data buffer */
 #define MLAN_RX_DATA_BUF_SIZE     (4 * 1024)
@@ -274,12 +254,6 @@ typedef t_u8 mlan_802_11_mac_addr[MLAN_MAC_ADDR_LENGTH];
 #define ALLOC_BUF_SIZE           (4 * 1024)
 /** SDIO MP aggr pkt limit */
 #define SDIO_MP_AGGR_DEF_PKT_LIMIT       (16)
-/** SDIO MP aggr pkt limit 8 */
-#define SDIO_MP_AGGR_DEF_PKT_LIMIT_8	 (8)
-/** SDIO MP aggr pkt limit 16*/
-#define SDIO_MP_AGGR_DEF_PKT_LIMIT_16	 (16)
-/** max SDIO MP aggr pkt limit */
-#define SDIO_MP_AGGR_DEF_PKT_LIMIT_MAX	 (16)
 
 /** SDIO IO Port mask */
 #define MLAN_SDIO_IO_PORT_MASK		0xfffff
@@ -318,6 +292,9 @@ typedef t_u8 mlan_802_11_mac_addr[MLAN_MAC_ADDR_LENGTH];
 
 /** Buffer flag for NET_MONITOR */
 #define MLAN_BUF_FLAG_NET_MONITOR        MBIT(11)
+
+/** Buffer flag for NULL data packet */
+#define MLAN_BUF_FLAG_NULL_PKT        MBIT(12)
 
 #ifdef DEBUG_LEVEL1
 /** Debug level bit definition */
@@ -466,7 +443,6 @@ typedef enum _mlan_event_id {
 	MLAN_EVENT_ID_UAP_FW_BSS_START = 0x0000002C,
 	MLAN_EVENT_ID_UAP_FW_BSS_ACTIVE = 0x0000002D,
 	MLAN_EVENT_ID_UAP_FW_BSS_IDLE = 0x0000002E,
-	MLAN_EVENT_ID_UAP_FW_MIC_COUNTERMEASURES = 0x0000002F,
 	MLAN_EVENT_ID_UAP_FW_STA_CONNECT = 0x00000030,
 	MLAN_EVENT_ID_UAP_FW_STA_DISCONNECT = 0x00000031,
 #endif
@@ -497,6 +473,9 @@ typedef enum _mlan_event_id {
 #ifdef UAP_SUPPORT
 	MLAN_EVENT_ID_DRV_UAP_CHAN_INFO = 0x80000020,
 #endif
+	MLAN_EVENT_ID_DRV_ROAM_OFFLOAD_ENABLE = 0x80000022,
+	MLAN_EVENT_ID_FW_ROAM_OFFLOAD_RESULT = 0x80000023,
+	MLAN_EVENT_ID_NAN_STARTED = 0x80000024,
 } mlan_event_id;
 
 /** Data Structures */
@@ -527,12 +506,14 @@ typedef struct _mlan_init_param {
 enum {
 	BAND_2GHZ = 0,
 	BAND_5GHZ = 1,
+	BAND_4GHZ = 2,
 };
 
 /** channel offset */
 enum {
 	SEC_CHAN_NONE = 0,
 	SEC_CHAN_ABOVE = 1,
+	SEC_CHAN_5MHZ = 2,
 	SEC_CHAN_BELOW = 3
 };
 
@@ -541,13 +522,19 @@ enum {
 	CHAN_BW_20MHZ = 0,
 	CHAN_BW_10MHZ,
 	CHAN_BW_40MHZ,
-	CHAN_BW_80MHZ,
+};
+
+/** scan mode */
+enum {
+	SCAN_MODE_MANUAL = 0,
+	SCAN_MODE_ACS,
+	SCAN_MODE_USER,
 };
 
 /** Band_Config_t */
 typedef MLAN_PACK_START struct _Band_Config_t {
 #ifdef BIG_ENDIAN_SUPPORT
-    /** Channel Selection Mode - (00)=manual, (01)=ACS */
+    /** Channel Selection Mode - (00)=manual, (01)=ACS,  (02)=user*/
 	t_u8 scanMode:2;
     /** Secondary Channel Offset - (00)=None, (01)=Above, (11)=Below */
 	t_u8 chan2Offset:2;
@@ -562,7 +549,7 @@ typedef MLAN_PACK_START struct _Band_Config_t {
 	t_u8 chanWidth:2;
     /** Secondary Channel Offset - (00)=None, (01)=Above, (11)=Below */
 	t_u8 chan2Offset:2;
-    /** Channel Selection Mode - (00)=manual, (01)=ACS */
+    /** Channel Selection Mode - (00)=manual, (01)=ACS, (02)=Adoption mode*/
 	t_u8 scanMode:2;
 #endif
 } MLAN_PACK_END Band_Config_t;
@@ -570,7 +557,7 @@ typedef MLAN_PACK_START struct _Band_Config_t {
 /** channel_band_t */
 typedef MLAN_PACK_START struct _chan_band_info {
     /** Band Configuration */
-	Band_Config_t band_config;
+	Band_Config_t bandcfg;
     /** channel */
 	t_u8 channel;
 	/** 11n flag */
@@ -697,6 +684,11 @@ typedef struct _mlan_buffer {
 	t_u32 use_count;
 } mlan_buffer, *pmlan_buffer;
 
+/** mlan_fw_info data structure */
+typedef struct _mlan_hw_info {
+	t_u32 fw_cap;
+} mlan_hw_info, *pmlan_hw_info;
+
 /** mlan_bss_attr data structure */
 typedef struct _mlan_bss_attr {
     /** BSS type */
@@ -712,6 +704,12 @@ typedef struct _mlan_bss_attr {
     /** The BSS is virtual */
 	t_u32 bss_virtual;
 } mlan_bss_attr, *pmlan_bss_attr;
+
+/** bss tbl data structure */
+typedef struct _mlan_bss_tbl {
+    /** BSS Attributes */
+	mlan_bss_attr bss_attr[MLAN_MAX_BSS_NUM];
+} mlan_bss_tbl, *pmlan_bss_tbl;
 
 #ifdef PRAGMA_PACK
 #pragma pack(push, 1)
@@ -1072,6 +1070,11 @@ typedef struct _mlan_callbacks {
 	mlan_status (*moal_get_fw_data) (IN t_void *pmoal_handle,
 					 IN t_u32 offset,
 					 IN t_u32 len, OUT t_u8 *pbuf);
+    /** moal_get_hw_spec_complete */
+	mlan_status (*moal_get_hw_spec_complete) (IN t_void *pmoal_handle,
+						  IN mlan_status status,
+						  IN mlan_hw_info * phw,
+						  IN pmlan_bss_tbl ptbl);
     /** moal_init_fw_complete */
 	mlan_status (*moal_init_fw_complete) (IN t_void *pmoal_handle,
 					      IN mlan_status status);
@@ -1189,9 +1192,6 @@ typedef struct _mlan_callbacks {
     /** moal_assert */
 	t_void (*moal_assert) (IN t_void *pmoal_handle, IN t_u32 cond);
 
-    /** moal_tcp_ack_tx_ind */
-	t_void (*moal_tcp_ack_tx_ind) (IN t_void *pmoal_handle,
-				       IN pmlan_buffer pmbuf);
     /** moal_hist_data_add */
 	t_void (*moal_hist_data_add) (IN t_void *pmoal_handle,
 				      IN t_u32 bss_index,
@@ -1202,6 +1202,7 @@ typedef struct _mlan_callbacks {
 					   IN t_u32 bss_index,
 					   IN t_u8 *peer_addr,
 					   IN t_s8 snr, IN t_s8 nflr);
+	mlan_status (*moal_get_host_time_ns) (OUT t_u64 *time);
 } mlan_callbacks, *pmlan_callbacks;
 
 /** Interrupt Mode SDIO */
@@ -1217,14 +1218,6 @@ typedef struct _mlan_callbacks {
 #define MLAN_INIT_PARA_ENABLED       1
 /** Parameter disabled, override MLAN default setting */
 #define MLAN_INIT_PARA_DISABLED      2
-
-/** Control bit for stream 2X2 */
-#define FEATURE_CTRL_STREAM_2X2     MBIT(6)
-/** Control bit for DFS support */
-#define FEATURE_CTRL_DFS_SUPPORT    MBIT(7)
-
-/** Default feature control */
-#define FEATURE_CTRL_DEFAULT        0xffffffff
 
 /** mlan_device data structure */
 typedef struct _mlan_device {
@@ -1274,10 +1267,6 @@ typedef struct _mlan_device {
     /** 802.11d configuration */
 	t_u32 cfg_11d;
 #endif
-    /** FW download CRC check flag */
-	t_u32 fw_crc_check;
-    /** Feature control bitmask */
-	t_u32 feature_control;
     /** enable/disable rx work */
 	t_u8 rx_work;
     /** dev cap mask */
@@ -1288,8 +1277,6 @@ typedef struct _mlan_device {
 	t_u32 multi_dtim;
     /** IEEE ps inactivity timeout value */
 	t_u32 inact_tmo;
-	/** card type */
-	t_u16 card_type;
     /** GPIO to indicate wakeup source */
 	t_u8 indication_gpio;
     /** channel time and mode for DRCS*/
@@ -1298,22 +1285,6 @@ typedef struct _mlan_device {
 
 /** MLAN API function prototype */
 #define MLAN_API
-#ifdef MULTI_INTERFACE
-#define mlan_register mlan_sdio_register
-#define mlan_unregister mlan_sdio_unregister
-#define mlan_init_fw mlan_sdio_init_fw
-#define mlan_set_init_param mlan_sdio_set_init_param
-#define mlan_dnld_fw mlan_sdio_dnld_fw
-#define mlan_shutdown_fw mlan_sdio_shutdown_fw
-#define mlan_send_packet mlan_sdio_send_packet
-#define mlan_ioctl mlan_sdio_ioctl
-#define mlan_main_process mlan_sdio_main_process
-#define mlan_rx_process mlan_sdio_rx_process
-#define mlan_select_wmm_queue mlan_sdio_select_wmm_queue
-#define mlan_interrupt mlan_sdio_interrupt
-#define mlan_pm_wakeup_card mlan_sdio_pm_wakeup_card
-#define mlan_is_main_process_running mlan_sdio_is_main_process_running
-#endif
 
 /** Registration */
 MLAN_API mlan_status mlan_register(IN pmlan_device pmdevice,
@@ -1344,8 +1315,7 @@ MLAN_API mlan_status mlan_main_process(IN t_void *pmlan_adapter
 	);
 
 /** Rx process */
-mlan_status mlan_rx_process(IN t_void *pmlan_adapter
-	);
+mlan_status mlan_rx_process(IN t_void *pmlan_adapter, IN t_u8 *rx_pkts);
 
 /** Packet Transmission */
 MLAN_API mlan_status mlan_send_packet(IN t_void *pmlan_adapter,
@@ -1358,6 +1328,11 @@ MLAN_API mlan_status mlan_recv_packet_complete(IN t_void *pmlan_adapter,
 
 /** interrupt handler */
 MLAN_API t_void mlan_interrupt(IN t_void *pmlan_adapter);
+
+#if defined(SYSKT)
+/** GPIO IRQ callback function */
+MLAN_API t_void mlan_hs_callback(IN t_void *pctx);
+#endif /* SYSKT_MULTI || SYSKT */
 
 MLAN_API t_void mlan_pm_wakeup_card(IN t_void *pmlan_adapter);
 

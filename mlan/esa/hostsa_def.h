@@ -2,7 +2,7 @@
  *
  *  @brief This file contains data structrue for authenticator/supplicant.
  *
- * Copyright (C) 2014-2016, Marvell International Ltd.
+ * Copyright (C) 2014-2017, Marvell International Ltd.
  *
  * This software file (the "File") is distributed by Marvell International
  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
@@ -130,6 +130,7 @@ typedef struct _hostsa_mlan_fns {
 	void (*hostsa_StaSendDeauth) (t_void *pmlan_private,
 				      t_u8 *addr, t_u16 reason);
 	t_u8 (*Hostsa_get_bss_role) (t_void *pmlan_private);
+	t_u8 (*Hostsa_get_intf_hr_len) (t_void *pmlan_private);
 	t_void (*Hostsa_sendEventRsnConnect) (t_void *pmlan_private,
 					      t_u8 *addr);
 } hostsa_mlan_fns, *phostsa_mlan_fns;

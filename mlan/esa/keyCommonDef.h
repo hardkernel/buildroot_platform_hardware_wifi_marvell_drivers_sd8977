@@ -2,7 +2,7 @@
  *
  *  @brief This file contains normal data type for key management
  *
- * Copyright (C) 2014-2016, Marvell International Ltd.
+ * Copyright (C) 2014-2017, Marvell International Ltd.
  *
  * This software file (the "File") is distributed by Marvell International
  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
@@ -83,15 +83,17 @@ typedef struct tkip_aes_key_data_t {
 	UINT8 key[CRYPTO_KEY_LEN_MAX];
 	UINT8 txMICKey[MIC_KEY_LEN_MAX];
 	UINT8 rxMICKey[MIC_KEY_LEN_MAX];
-	UINT32 hiReplayCounter32;	// !< initialized by host
-	UINT16 loReplayCounter16;	// !< initialized by host
-	UINT32 txIV32;		// !< controlled by FW
-	UINT16 txIV16;		// !< controlled by FW
+	UINT32 hiReplayCounter32;	//!< initialized by host
+	UINT16 loReplayCounter16;	//!< initialized by host
+	UINT32 txIV32;		//!< controlled by FW
+	UINT16 txIV16;		//!< controlled by FW
 	UINT32 TKIPMicLeftValue;
 	UINT32 TKIPMicRightValue;
 
-	/* HW new design for 8682 only to support interleaving FW need to save
-	   these value and restore for next fragment */
+	/* HW new design for 8682 only to support interleaving
+	 * FW need to save these value and
+	 * restore for next fragment
+	 */
 	UINT32 TKIPMicData0Value;
 	UINT32 TKIPMicData1Value;
 	UINT32 TKIPMicData2Value;
@@ -123,7 +125,7 @@ typedef struct {
 	UINT8 pn_inc;
 	UINT8 TxPN[WAPI_PN_LEN];
 	UINT8 RxPN[WAPI_PN_LEN];
-	UINT8 *pLastKey;	// keep the orig cipher_key_t pointer
+	UINT8 *pLastKey;	//keep the orig cipher_key_t pointer
 } wapi_key_data_t;
 
 typedef struct {
@@ -150,23 +152,24 @@ typedef MLAN_PACK_START struct {
 } MLAN_PACK_END Hdr_8021x_t;
 
 typedef MLAN_PACK_START struct {
-	/* don't change this order.  It is set to match the ** endianness of
-	   the message */
+	/* don't change this order.  It is set to match the
+	 ** endianness of the message
+	 */
 
 	/* Byte 1 */
-	UINT16 KeyMIC:1;	/* Bit 8 */
-	UINT16 Secure:1;	/* Bit 9 */
-	UINT16 Error:1;		/* Bit 10 */
-	UINT16 Request:1;	/* Bit 11 */
-	UINT16 EncryptedKeyData:1;	/* Bit 12 */
+	UINT16 KeyMIC:1;	/* Bit  8     */
+	UINT16 Secure:1;	/* Bit  9     */
+	UINT16 Error:1;		/* Bit  10    */
+	UINT16 Request:1;	/* Bit  11    */
+	UINT16 EncryptedKeyData:1;	/* Bit  12    */
 	UINT16 Reserved:3;	/* Bits 13-15 */
 
 	/* Byte 0 */
-	UINT16 KeyDescriptorVersion:3;	/* Bits 0-2 */
-	UINT16 KeyType:1;	/* Bit 3 */
-	UINT16 KeyIndex:2;	/* Bits 4-5 */
-	UINT16 Install:1;	/* Bit 6 */
-	UINT16 KeyAck:1;	/* Bit 7 */
+	UINT16 KeyDescriptorVersion:3;	/* Bits 0-2   */
+	UINT16 KeyType:1;	/* Bit  3     */
+	UINT16 KeyIndex:2;	/* Bits 4-5   */
+	UINT16 Install:1;	/* Bit  6     */
+	UINT16 KeyAck:1;	/* Bit  7     */
 
 } MLAN_PACK_END key_info_t;
 
@@ -203,7 +206,7 @@ typedef MLAN_PACK_START struct {
 	key_info_t key_info;
 	UINT16 key_length;
 	UINT32 replay_cnt[2];
-	UINT8 key_nonce[NONCE_SIZE];	/* 32 bytes */
+	UINT8 key_nonce[NONCE_SIZE];	/*32 bytes */
 	UINT8 EAPOL_key_IV[16];
 	UINT8 key_RSC[8];
 	UINT8 key_ID[8];

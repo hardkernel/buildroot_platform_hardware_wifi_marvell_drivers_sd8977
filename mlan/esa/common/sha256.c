@@ -2,7 +2,7 @@
  *
  *  @brief This file defines the SHA256 hash implementation and interface functions
  *
- * Copyright (C) 2014-2016, Marvell International Ltd.
+ * Copyright (C) 2014-2017, Marvell International Ltd.
  *
  * This software file (the "File") is distributed by Marvell International
  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
@@ -97,8 +97,7 @@ hmac_sha256_vector(void *priv, UINT8 *key,
 	phostsa_private psapriv = (phostsa_private)priv;
 	hostsa_util_fns *util_fns = &psapriv->util_fns;
 	size_t i;
-	UINT8 *pKpad;		/* was UINT8 k_pad[64], padding - key XORd with
-				   ipad/opad */
+	UINT8 *pKpad;		/* was UINT8 k_pad[64], padding - key XORd with ipad/opad */
 	UINT8 *pTk;		/* was UINT8 tk[32] */
 	UINT8 *pTmpBuf;
 	UINT32 *ptrU32;
@@ -115,10 +114,15 @@ hmac_sha256_vector(void *priv, UINT8 *key,
 		key_len = 32;
 	}
 
-	/* the HMAC_SHA256 transform looks like: SHA256(K XOR opad, SHA256(K
-	   XOR ipad, text)) where K is an n byte key ipad is the byte 0x36
-	   repeated 64 times opad is the byte 0x5c repeated 64 times and text
-	   is the data being protected */
+	/* the HMAC_SHA256 transform looks like:
+	 *
+	 * SHA256(K XOR opad, SHA256(K XOR ipad, text))
+	 *
+	 * where K is an n byte key
+	 * ipad is the byte 0x36 repeated 64 times
+	 * opad is the byte 0x5c repeated 64 times
+	 * and text is the data being protected
+	 */
 
 	/* start out by storing key in ipad */
 	memset(util_fns, pKpad, 0x00, 64);
@@ -252,14 +256,18 @@ sha256_compress(void *priv, struct sha256_state *md,
 	phostsa_private psapriv = (phostsa_private)priv;
 	hostsa_util_fns *util_fns = &psapriv->util_fns;
 	UINT32 *pW;		/* was UINT32 W[64] */
-	UINT32 *pS;		/* was UINT32 S[8] */
+	UINT32 *pS;		/* was UINT32 S[8]  */
 	UINT32 t0;
 	UINT32 t1;
 	UINT32 t;
 	UINT32 i;
 	UINT32 *ptrU32;
 
-	/* pW = (64 * 4) = 256 ** pS = (8 * 4) = 32 ** ----- ** 288 */
+	/*   pW = (64 * 4) = 256
+	 **   pS = (8 * 4)  =  32
+	 **                 -----
+	 **                   288
+	 */
 	ptrU32 = pW = (UINT32 *)pScratchMem;
 	pS = pW + 64;
 
@@ -409,9 +417,10 @@ sha256_done(void *priv, struct sha256_state *md, UINT8 *out, UINT8 *pScratchMem)
 	/* append the '1' bit */
 	md->buf[md->curlen++] = (unsigned char)0x80;
 
-	/* if the length is currently above 56 bytes we append zeros then
-	   compress.  Then we can fall back to padding zeros and length
-	   encoding like normal. */
+	/* if the length is currently above 56 bytes we append zeros
+	 * then compress.  Then we can fall back to padding zeros and length
+	 * encoding like normal.
+	 */
 	if (md->curlen > 56) {
 		while (md->curlen < 64) {
 			md->buf[md->curlen++] = (unsigned char)0;

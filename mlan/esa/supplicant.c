@@ -2,7 +2,7 @@
  *
  *  @brief This file defines the API for supplicant
  *
- * Copyright (C) 2014-2016, Marvell International Ltd.
+ * Copyright (C) 2014-2017, Marvell International Ltd.
  *
  * This software file (the "File") is distributed by Marvell International
  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
@@ -51,7 +51,7 @@ ProcessEAPoLKeyPkt(phostsa_private priv, mlan_buffer *pmbuf,
 #endif
 
 	case MLAN_BSS_ROLE_STA:
-		/* key data */
+		/*key data */
 		ProcessKeyMgmtDataSta(priv, pmbuf, sa, da);
 		break;
 

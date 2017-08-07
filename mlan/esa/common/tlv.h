@@ -3,7 +3,7 @@
  *  @brief Definitions of the Marvell TLV and parsing functions.
  *
  *
- * Copyright (C) 2014-2016, Marvell International Ltd.
+ * Copyright (C) 2014-2017, Marvell International Ltd.
  *
  * This software file (the "File") is distributed by Marvell International
  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
@@ -445,8 +445,7 @@ typedef MLAN_PACK_START struct {
 	UINT16 EtherFrmLen;
 	UINT8 DestAddr[6];
 	UINT8 SrcAddr[6];
-	UINT8 EtherFrmBody[MAX_KEEPALIVE_PKT_LEN];	// Last 4 bytes are
-							// 32bit FCS
+	UINT8 EtherFrmBody[MAX_KEEPALIVE_PKT_LEN];	//Last 4 bytes are 32bit FCS
 } MLAN_PACK_END MrvlIEAutoTx_t;
 
 typedef MLAN_PACK_START struct {
@@ -541,7 +540,7 @@ typedef MLAN_PACK_START struct {
 	UINT16 Length;
 	IEEEtypes_MacAddr_t Bssid;
 	UINT16 Rsvd;
-	SINT16 Rssi;		// Signal strength
+	SINT16 Rssi;		//Signal strength
 	UINT16 Age;
 	UINT32 QualifiedNeighborBitmap;
 	UINT32 BlackListDuration;
@@ -638,7 +637,7 @@ typedef MLAN_PACK_START struct {
 	UINT32 bmpRateOfHT_DW2;
 	UINT32 bmpRateOfHT_DW3;
 #ifdef DOT11AC
-	UINT16 bmpRateOfVHT[8];	// per SS
+	UINT16 bmpRateOfVHT[8];	//per SS
 #endif
 } MLAN_PACK_END MrvlIE_TxRateScope_t;
 
@@ -804,8 +803,9 @@ typedef enum _tagScoCoexBtTraffic {
 
 typedef MLAN_PACK_START struct {
 	MrvlIEParamSet_t IEParam;
-	UINT32 configBitmap;	/* Bit 0 : overrideCts2SelfProtection ** Bit
-				   1-31 : Reserved */
+	UINT32 configBitmap;	/* Bit    0 : overrideCts2SelfProtection
+				 ** Bit 1-31 : Reserved
+				 */
 	UINT32 apStaBtCoexEnabled;
 	UINT32 reserved[3];	/* For future use. */
 } MLAN_PACK_END MrvlIETypes_ApBTCoexCommonConfig_t;
@@ -813,10 +813,10 @@ typedef MLAN_PACK_START struct {
 typedef MLAN_PACK_START struct {
 	MrvlIEParamSet_t IEParam;
 	UINT16 protectionFrmQTime[BT_TRAFFIC_MAX];	/* Index 0 for ONLY_SCO
-							   ** 1 for
-							   ACL_BEFORE_SCO ** 2
-							   for ACL_AFTER_SCO **
-							   3 is Reserved */
+							 **       1 for ACL_BEFORE_SCO
+							 **       2 for ACL_AFTER_SCO
+							 **       3 is Reserved
+							 */
 	UINT16 protectionFrmRate;
 	UINT16 aclFrequency;
 	UINT32 reserved[4];	/* For future use. */
@@ -842,7 +842,7 @@ typedef MLAN_PACK_START struct {
 	UINT32 cfEndAllocationFail;
 	UINT32 reserved[8];	/* For future use. */
 } MLAN_PACK_END MrvlIETypes_ApBTCoexStats_t;
-#endif // AP_BTCOEX
+#endif //AP_BTCOEX
 
 typedef MLAN_PACK_START struct {
 	MrvlIEParamSet_t Hdr;
@@ -872,4 +872,4 @@ typedef MLAN_PACK_START struct MrvlIE_ApiVersionEntry_t {
 
 /** API Version Ids */
 #define KEY_API_VER_ID		0x1
-#endif // _TLV_H_
+#endif //_TLV_H_

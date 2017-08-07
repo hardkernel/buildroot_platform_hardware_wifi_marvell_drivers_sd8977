@@ -2,7 +2,7 @@
  *
  *  @brief This file defines the function for checking security type and ie
  *
- * Copyright (C) 2014-2016, Marvell International Ltd.
+ * Copyright (C) 2014-2017, Marvell International Ltd.
  *
  * This software file (the "File") is distributed by Marvell International
  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
@@ -176,11 +176,12 @@ assocSrvAp_checkRsnWpa(cm_Connection *connPtr,
 	AkmSuite_t akm[AKM_SUITE_MAX];
 	UINT8 minimumRsnLen;
 
-	/* staRsnCap field is only used to compare RsnCap received in
-	   AssocRequest with rsnCap received in 4 way handshake PWKMsg2.
+	/* staRsnCap field is only used to compare RsnCap received in AssocRequest
+	   with rsnCap received in 4 way handshake PWKMsg2.
 
 	   we use 0xFFFF signature. If rsnCap is not present in pRsn,
-	   signature 0xFFFF would be saved in pKeyMgmtInfo->staRsnCap. */
+	   signature 0xFFFF would be saved in pKeyMgmtInfo->staRsnCap.
+	 */
 
 	union {
 		UINT16 shortInt;
@@ -196,14 +197,13 @@ assocSrvAp_checkRsnWpa(cm_Connection *connPtr,
 	if (pRsn && (pSecType->wpa2 == 1)) {
 
 		/*
-		   In pRsn , All elements after Ver field are optional per the
-		   spec.
+		   In pRsn , All elements after Ver field are optional per the spec.
 
 		   we reject Assoc Request, if GrpKeyCipher, pwsKey and AuthKey
 		   is not present.
 
-		   we can rely on minimum length check as we are rejecting
-		   Assoc Request having pwsKeyCnt > 1 and AuthKeyCnt > 1
+		   we can rely on minimum length check as we are rejecting Assoc Request
+		   having pwsKeyCnt > 1 and AuthKeyCnt > 1
 
 		 */
 
@@ -267,8 +267,7 @@ assocSrvAp_checkRsnWpa(cm_Connection *connPtr,
 	if (SUCCESS == result) {
 #ifdef DOT11W
 		if (staRsnCap.shortInt != 0xFFFF) {
-			/* Save the peer STA PMF capability, which will later
-			   used to enable PMF */
+			/* Save the peer STA PMF capability, which will later used to enable PMF */
 			connPtr->staData.peerPMFCapable = staRsnCap.cfg.MFPC;
 		}
 #endif
@@ -346,8 +345,11 @@ assocSrvAp_CheckSecurity(cm_Connection *connPtr,
 			retval = MLME_SUCCESS;
 		}
 	} else if (pBssConfig->SecType.wapi) {
-		/* if (wapi_ie_check(pBssConfig, pWapi, pResult)) { *pResult =
-		   0; retval = MLME_SUCCESS; } */
+		/*       if (wapi_ie_check(pBssConfig, pWapi, pResult))
+		   {
+		   *pResult = 0;
+		   retval = MLME_SUCCESS;
+		   } */
 	}
 
 	return retval;

@@ -3,7 +3,7 @@
  *  @brieThis file contains the MIB structure definitions
  *          based on IEEE 802.11 specification.
  *
- * Copyright (C) 2014-2016, Marvell International Ltd.
+ * Copyright (C) 2014-2017, Marvell International Ltd.
  *
  * This software file (the "File") is distributed by Marvell International
  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
@@ -38,8 +38,8 @@ Change log:
 /*-----------------------------------------*/
 
 typedef struct MIB_PhySuppDataRatesTx_s {
-	UINT8 SuppDataRatesTxIdx;	/* 1 to IEEEtypes_MAX_DATA_RATES_G */
-	UINT8 SuppDataRatesTxVal;	/* 2 to 127 */
+	UINT8 SuppDataRatesTxIdx;	/*1 to IEEEtypes_MAX_DATA_RATES_G */
+	UINT8 SuppDataRatesTxVal;	/*2 to 127 */
 } MIB_PHY_SUPP_DATA_RATES_TX;
 
 /*------------------------*/
@@ -48,7 +48,7 @@ typedef struct MIB_PhySuppDataRatesTx_s {
 /* This struct is used in ROM and it should not be changed at all */
 typedef struct MIB_WepDefaultKeys_s {
 	UINT8 WepDefaultKeyIdx;	/* 1 to 4 */
-	UINT8 WepDefaultKeyType;	/* */
+	UINT8 WepDefaultKeyType;	/*   */
 	UINT8 WepDefaultKeyValue[WEP_KEY_USER_INPUT];	/* 5 byte string */
 } MIB_WEP_DEFAULT_KEYS;
 

@@ -2,7 +2,7 @@
  *
  *  @brief This file contains the MIB structure definitions based on IEEE 802.11 specification.
  *
- * Copyright (C) 2014-2016, Marvell International Ltd.
+ * Copyright (C) 2014-2017, Marvell International Ltd.
  *
  * This software file (the "File") is distributed by Marvell International
  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
@@ -37,10 +37,11 @@ Change log:
 
 typedef struct MIB_StaCfg_s
 {
-	UINT8 CfPeriod;		/* 0 to 255 */
-	UINT16 CfpMax;		/* 0 to 65535 */
-	UINT8 PwrMgtMode;	/* PwrMgmtMode_e values */
-	UINT8 OpRateSet[16];	/* 16 byte array is sufficient for 14 rate */
+	UINT8 CfPeriod;		/* 0 to 255              */
+	UINT16 CfpMax;		/* 0 to 65535            */
+	UINT8 PwrMgtMode;	/* PwrMgmtMode_e values  */
+	UINT8 OpRateSet[16];	/* 16 byte array is sufficient for
+				   14 rate */
 #ifdef DOT11H
 	Boolean dot11SpectrumManagementRequired;
 #endif
@@ -246,7 +247,7 @@ typedef struct MIB_PhyIRTable_s {
 
 typedef struct MIB_PhyRegDomainsSupp_s {
 	UINT32 RegDomainsSuppIdx;
-	UINT8 RegDomainsSuppVal;	/* SNMP_RegDomainsSuppVal_e values */
+	UINT8 RegDomainsSuppVal;	/*SNMP_RegDomainsSuppVal_e values */
 } MIB_PHY_REG_DOMAINS_SUPPPORTED;
 
 /*-------------------------*/
@@ -257,9 +258,9 @@ typedef struct MIB_PhyRegDomainsSupp_s {
 
 typedef struct MIB_PhyAntList_s {
 	UINT8 AntListIdx;
-	UINT8 SuppTxAnt;	/* SNMP_Boolean_e values */
-	UINT8 SuppRxAnt;	/* SNMP_Boolean_e values */
-	UINT8 RxDiv;		/* SNMP_Boolean_e values */
+	UINT8 SuppTxAnt;	/*SNMP_Boolean_e values */
+	UINT8 SuppRxAnt;	/*SNMP_Boolean_e values */
+	UINT8 RxDiv;		/*SNMP_Boolean_e values */
 } MIB_PHY_ANT_LIST;
 
 /*----------------------------------------*/
@@ -269,8 +270,8 @@ typedef struct MIB_PhyAntList_s {
 /*----------------------------------------*/
 
 typedef struct MIB_PhySuppDataRatesRx_s {
-	UINT8 SuppDataRatesRxIdx;	/* 1 to 8 */
-	UINT8 SuppDataRatesRxVal;	/* 2 to 127 */
+	UINT8 SuppDataRatesRxIdx;	/*1 to 8 */
+	UINT8 SuppDataRatesRxVal;	/*2 to 127 */
 } MIB_PHY_SUPP_DATA_RATES_RX;
 
 typedef struct MIB_DHCP_s {
@@ -298,7 +299,7 @@ typedef struct MIB_IP_LAN_s {
 
 typedef struct _MIB_WB {
 	UINT8 devName[16];	// Must be a string:
-	// 15 Max characters
+	//      15 Max characters
 	UINT8 cloneMacAddr[6];	// cloned MAC Address
 	UINT8 opMode;		// 0 for infrastructure,
 	// 1 for ad-hoc
@@ -371,16 +372,16 @@ typedef struct Mrvl_MIB_RSN_GrpKey_s {
 
 typedef struct Mrvl_MIB_StatsDetails {
 	/* WARNING: Do not change the order of variables in this structure */
-	UINT32 TKIPLocalMICFailures;	/* OID: 0x0b -> 0 */
-	UINT32 CCMPDecryptErrors;	/* OID: 0x0c -> 1 */
-	UINT32 WEPUndecryptableCount;	/* OID: 0x0d -> 2 */
-	UINT32 WEPICVErrorCount;	/* OID: 0x0e -> 3 */
-	UINT32 DecryptFailureCount;	/* OID: 0x0f -> 4 */
-	UINT32 failed;		/* OID: 0x12 -> 5 */
-	UINT32 retry;		/* OID: 0x13 -> 6 */
-	UINT32 multiretry;	/* OID: 0x14 -> 7 */
-	UINT32 framedup;	/* OID: 0x15 -> 8 */
-	UINT32 rtssuccess;	/* OID: 0x16 -> 9 */
+	UINT32 TKIPLocalMICFailures;	/* OID: 0x0b -> 0  */
+	UINT32 CCMPDecryptErrors;	/* OID: 0x0c -> 1  */
+	UINT32 WEPUndecryptableCount;	/* OID: 0x0d -> 2  */
+	UINT32 WEPICVErrorCount;	/* OID: 0x0e -> 3  */
+	UINT32 DecryptFailureCount;	/* OID: 0x0f -> 4  */
+	UINT32 failed;		/* OID: 0x12 -> 5  */
+	UINT32 retry;		/* OID: 0x13 -> 6  */
+	UINT32 multiretry;	/* OID: 0x14 -> 7  */
+	UINT32 framedup;	/* OID: 0x15 -> 8  */
+	UINT32 rtssuccess;	/* OID: 0x16 -> 9  */
 	UINT32 rtsfailure;	/* OID: 0x17 -> 10 */
 	UINT32 ackfailure;	/* OID: 0x18 -> 11 */
 	UINT32 rxfrag;		/* OID: 0x19 -> 12 */
@@ -441,13 +442,13 @@ typedef struct MIB_BURST_MODE {
 
 typedef struct mib_dot1dPortEntry_s {
 	UINT8 mib_dot1dStpPortPriority;	/* (0..255) */
-	UINT8 mib_dot1dStpPortEnable;	/* 1: enable; 2: disable */
+	UINT8 mib_dot1dStpPortEnable;	/*1: enable; 2: disable */
 	UINT16 mib_dot1dStpPortPathCost;	/* (1..65535) */
 } mib_dot1dPortEntry_t;
 
 typedef struct mib_dot1dStp_s {
 	UINT8 mib_dot1dStpPortPriority;	/* (0..255) */
-	UINT8 mib_dot1dStpPortEnable;	/* 1: enable; 2: disable */
+	UINT8 mib_dot1dStpPortEnable;	/*1: enable; 2: disable */
 	UINT16 mib_dot1dStpPortPathCost;	/* (1..65535) */
 	UINT32 mib_dot1dTpAgingTime;	/* (10..1000000) */
 	UINT16 mib_dot1dStpPriority;
@@ -510,7 +511,7 @@ typedef struct MIB_802DOT11_s {
 
     /*-----------------------------------------*/
 
-	/* Resource Type */
+	/* Resource Type                           */
 
     /*-----------------------------------------*/
 
@@ -518,7 +519,7 @@ typedef struct MIB_802DOT11_s {
 
     /*-----------------------------------------*/
 
-	/* PHY Attributes */
+	/* PHY Attributes                          */
 
     /*-----------------------------------------*/
 
@@ -548,9 +549,9 @@ typedef struct MIB_802DOT11_s {
 	MIB_RSNCONFIG RSNConfig;
 #endif
 
-	// MIB_RSNCONFIG_UNICAST_CIPHERS UnicastCiphers;
+	//MIB_RSNCONFIG_UNICAST_CIPHERS UnicastCiphers;
 
-	// MIB_RSNCONFIG_AUTH_SUITES RSNConfigAuthSuites;
+	//MIB_RSNCONFIG_AUTH_SUITES  RSNConfigAuthSuites;
 
 #ifdef AP_WPA2
 

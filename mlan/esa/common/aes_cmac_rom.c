@@ -2,7 +2,7 @@
  *
  *  @brief This file defines aes cmac related function
  *
- * Copyright (C) 2014-2016, Marvell International Ltd.
+ * Copyright (C) 2014-2017, Marvell International Ltd.
  *
  * This software file (the "File") is distributed by Marvell International
  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
@@ -170,7 +170,7 @@ mrvl_aes_cmac(phostsa_private priv, UINT8 *key, UINT8 *input, int length,
 	memset(util_fns, X, 0x00, sizeof(X));
 
 	for (i = 0; i < n - 1; i++) {
-		xor_128(X, &input[16 * i], Y);	/* Y := Mi (+) X */
+		xor_128(X, &input[16 * i], Y);	/* Y := Mi (+) X  */
 		mrvl_aes_128(key, Y, X);	/* X := AES-128(KEY, Y); */
 	}
 

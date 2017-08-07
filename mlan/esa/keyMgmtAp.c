@@ -2,7 +2,7 @@
  *
  *  @brief This file defined the eapol paket process and key management for authenticator
  *
- * Copyright (C) 2014-2016, Marvell International Ltd.
+ * Copyright (C) 2014-2017, Marvell International Ltd.
  *
  * This software file (the "File") is distributed by Marvell International
  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
@@ -121,8 +121,7 @@ KeyMgmtSendGrpKeyMsgToAllSta(hostsa_private *priv)
 				WAITING_4_MSG4)) ||
 			   (pKeyMgmtInfo->rom.keyMgmtState ==
 			    WAITING_4_GRP_REKEY_MSG2)) {
-			// TODO:How to handle group rekey if either Groupwise
-			// handshake
+			// TODO:How to handle group rekey if either Groupwise handshake
 			// Group rekey is already in progress for this STA?
 		}
 
@@ -143,9 +142,9 @@ keyApi_ApUpdateKeyMaterial(void *priv, cm_Connection *connPtr,
 	hostsa_mlan_fns *pm_fns = &psapriv->mlan_fns;
 	BssConfig_t *pBssConfig = MNULL;
 	KeyData_t *pKeyData = MNULL;
-	// cipher_key_buf_t *pCipherKeyBuf;
+	//cipher_key_buf_t *pCipherKeyBuf;
 	Cipher_t *pCipher = MNULL;
-	// KeyData_t pwsKeyData;
+	//KeyData_t pwsKeyData;
 	mlan_ds_encrypt_key encrypt_key;
 	t_u8 bcast_addr[MAC_ADDR_SIZE] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
 	apInfo_t *pApInfo = &psapriv->apinfo;
@@ -155,12 +154,12 @@ keyApi_ApUpdateKeyMaterial(void *priv, cm_Connection *connPtr,
 	if (pBssConfig->SecType.wpa || pBssConfig->SecType.wpa2) {
 		memset(util_fns, &encrypt_key, 0, sizeof(mlan_ds_encrypt_key));
 
-		// connPtr->cmFlags.RSNEnabled = TRUE;
+		//connPtr->cmFlags.RSNEnabled = TRUE;
 		if (updateGrpKey == TRUE) {
 			pKeyData = &pApInfo->bssData.grpKeyData;
 			pCipher = &pBssConfig->RsnConfig.mcstCipher;
 		} else if (connPtr) {
-			/* pCipherKeyBuf = connPtr->pwTxRxCipherKeyBuf;
+			/*  pCipherKeyBuf = connPtr->pwTxRxCipherKeyBuf;
 			   memcpy((void*)&pwsKeyData,
 			   (void*)&pCipherKeyBuf->cipher_key.ckd.hskData.pwsKeyData,
 			   sizeof(KeyData_t)); */
@@ -241,9 +240,10 @@ ReInitGTK(t_void *priv)
 	pBssData = &pApInfo->bssData;
 
 	/*
-	   Disabled for interop Not all clients like this
-	   pBssData->grpKeyData.KeyIndex = (pBssData->grpKeyData.KeyIndex & 3)
-	   + 1; */
+	   Disabled for interop
+	   Not all clients like this
+	   pBssData->grpKeyData.KeyIndex = (pBssData->grpKeyData.KeyIndex & 3) + 1;
+	 */
 
 	ROM_InitGTK(psapriv, &pBssData->grpKeyData,
 		    pBssData->GNonce, psapriv->curr_addr);
@@ -262,10 +262,10 @@ KeyMgmtGrpRekeyCountUpdate(t_void *context)
 
 	if (psapriv->GrpRekeyTimerIsSet &&
 	    pApInfo->bssData.grpRekeyCntRemaining) {
-		// Periodic group rekey is configured.
+		//Periodic group rekey is configured.
 		pApInfo->bssData.grpRekeyCntRemaining--;
 		if (!pApInfo->bssData.grpRekeyCntRemaining) {
-			// Group rekey timeout hit.
+			//Group rekey timeout hit.
 			pApInfo->bssData.grpRekeyCntRemaining
 				= pApInfo->bssData.grpRekeyCntConfigured;
 
@@ -326,8 +326,9 @@ KeyMgmtHskTimeout(t_void *context)
 	pRsnConfig = &pApInfo->bssConfig.RsnConfig;
 
 	connPtr->timer_is_set = 0;
-	/* Assume when this function gets called pKeyMgmtInfo->keyMgmtState **
-	   will not be in HSK_NOT_STARTED or HSK_END */
+	/* Assume when this function gets called pKeyMgmtInfo->keyMgmtState
+	 ** will not be in HSK_NOT_STARTED or HSK_END
+	 */
 	if (pKeyMgmtInfo->rom.keyMgmtState <= WAITING_4_MSG4) {
 		if (pKeyMgmtInfo->numHskTries >= pRsnConfig->MaxPwsHskRetries) {
 			maxRetriesDone = MTRUE;
@@ -341,12 +342,9 @@ KeyMgmtHskTimeout(t_void *context)
 	}
 
 	if (maxRetriesDone) {
-		// Some STAs do not respond to PWK Msg1 if the EAPOL Proto
-		// Version is 1
-		// in 802.1X header, hence switch to v2 after all attempts with
-		// v1 fail
-		// for PWK Msg1. Set the HskTimeoutCtn to 1 to get the same
-		// "retries"
+		// Some STAs do not respond to PWK Msg1 if the EAPOL Proto Version is 1
+		// in 802.1X header, hence switch to v2 after all attempts with v1 fail
+		// for PWK Msg1. Set the HskTimeoutCtn to 1 to get the same "retries"
 		// as with v1.
 		if (((WAITING_4_MSG2 == pKeyMgmtInfo->rom.keyMgmtState)
 		     || (MSG1_PENDING == pKeyMgmtInfo->rom.keyMgmtState))
@@ -393,7 +391,7 @@ KeyMgmtStartHskTimer(void *context)
 		       WAITING_4_GRP_REKEY_MSG2)) {
 		timeoutInms = pRsnConfig->GrpHskTimeOut;
 	} else {
-		// EAPOL HSK is not in progress. No need to start HSK timer
+		//EAPOL HSK is not in progress. No need to start HSK timer
 		return;
 	}
 
@@ -403,9 +401,13 @@ KeyMgmtStartHskTimer(void *context)
 	}
 
 	/* if STA is in PS1 then we are using max(STA_PS_EAPOL_HSK_TIMEOUT,
-	   HSKtimeout)for timeout instead of configured timeout value */
-	/* if(PWR_MODE_PWR_SAVE == connPtr->staData.pwrSaveInfo.mode) {
-	   timeoutInms = MAX(STA_PS_EAPOL_HSK_TIMEOUT, timeoutInms); } */
+	 * HSKtimeout)for timeout instead of configured timeout value
+	 */
+	/* if(PWR_MODE_PWR_SAVE == connPtr->staData.pwrSaveInfo.mode)
+	   {
+	   timeoutInms = MAX(STA_PS_EAPOL_HSK_TIMEOUT, timeoutInms);
+	   }
+	 */
 	util_fns->moal_start_timer(util_fns->pmoal_handle,
 				   connPtr->HskTimer, MFALSE, timeoutInms);
 	connPtr->timer_is_set = 1;
@@ -431,14 +433,16 @@ PrepDefaultEapolMsg(phostsa_private priv, cm_Connection *connPtr,
 	apInfo_t *pApInfo = &priv->apinfo;
 	EAPOL_KeyMsg_Tx_t *tx_eapol_ptr;
 	apKeyMgmtInfoSta_t *pKeyMgmtInfo;
+	hostsa_mlan_fns *pm_fns = &priv->mlan_fns;
+	UINT8 intf_hr_len =
+		pm_fns->Hostsa_get_intf_hr_len(pm_fns->pmlan_private);
 #define UAP_EAPOL_PRIORITY 7	/* Voice */
 
 	ENTER();
 
 	pmbuf->priority = UAP_EAPOL_PRIORITY;
 	pmbuf->buf_type = MLAN_BUF_TYPE_DATA;
-	pmbuf->data_offset =
-		(sizeof(UapTxPD) + INTF_HEADER_LEN + DMA_ALIGNMENT);
+	pmbuf->data_offset = (sizeof(UapTxPD) + intf_hr_len + DMA_ALIGNMENT);
 	tx_eapol_ptr =
 		(EAPOL_KeyMsg_Tx_t *)((UINT8 *)pmbuf->pbuf +
 				      pmbuf->data_offset);
@@ -499,8 +503,7 @@ GeneratePWKMsg1(hostsa_private *priv, cm_Connection *connPtr)
 
 	frameLen = EAPOL_KeyMsg_Len - sizeof(Hdr_8021x_t)
 		- sizeof(tx_eapol_ptr->keyMsg.key_data)
-		+ tx_eapol_ptr->keyMsg.key_material_len;	// key_mtr_len
-								// is 0 here
+		+ tx_eapol_ptr->keyMsg.key_material_len;	//key_mtr_len is 0 here
 
 	packet_len = frameLen + sizeof(Hdr_8021x_t) + sizeof(ether_hdr_t);
 
@@ -618,19 +621,22 @@ GeneratePWKMsg3(hostsa_private *priv, cm_Connection *connPtr)
 			  wpa2) ? WPA2_HANDSHAKE : 0)), replay_cnt,
 		       pHskData->ANonce);
 
-	/* if (pKeyMgmtInfo->staSecType.wpa2) { // Netgear WAG511 and USB55
-	   cards don't like this field set to // anything other than zero.
-	   Hence hard code this value to zero // in all outbound EAPOL
-	   frames... // The client is now vulnerable to replay attacks from the
-	   point // it receives EAP-message3 till reception of first
-	   management // frame from uAP.
+	/*if (pKeyMgmtInfo->staSecType.wpa2)
+	   {
+	   // Netgear WAG511 and USB55 cards don't like this field set to
+	   // anything other than zero. Hence hard code this value to zero
+	   // in all outbound EAPOL frames...
+	   // The client is now vulnerable to replay attacks from the point
+	   // it receives EAP-message3 till reception of first management
+	   // frame from uAP.
 
 	   tx_eapol_ptr->keyMsg.key_RSC[0] =
 	   pApInfo->bssConfig.grpKeyData.TxIV16 & 0x00FF;
 	   tx_eapol_ptr->keyMsg.key_RSC[1] =
 	   (pApInfo->bssConfig.grpKeyData.TxIV16 >> 8) & 0x00FF;
 	   memcpy((void*)(tx_eapol_ptr->keyMsg.key_RSC + 2),
-	   &pApInfo->bssData.grpKeyData.TxIV32, 4); } */
+	   &pApInfo->bssData.grpKeyData.TxIV32, 4);
+	   } */
 /*
     pBcnFrame = (dot11MgtFrame_t *)BML_DATA_PTR(connPtr->pBcnBufferDesc);
     if (pKeyMgmtInfo->rom.staSecType.wpa)
@@ -833,9 +839,11 @@ GenerateApEapolMsg(hostsa_private *priv,
 	if (connPtr->timer_is_set) {
 		KeyMgmtStopHskTimer((t_void *)connPtr);
 	}
-	/* If msgState is any waiting_** state, ** it will decrease to
-	   corresponding **_pending state. */
-	/* Note: it will reduce the if checks */
+	/* If msgState is any waiting_** state,
+	 ** it will decrease to corresponding **_pending state.
+	 */
+	/* Note: it will reduce the if checks
+	 */
 	if ((msgState & 0x1) == 0) {
 		msgState--;
 	}
@@ -849,7 +857,7 @@ GenerateApEapolMsg(hostsa_private *priv,
 		   || (msgState == GRP_REKEY_MSG1_PENDING)) {
 		status = GenerateGrpMsg1(priv, connPtr);
 	} else {
-		// This should not happen
+		//This should not happen
 		return FAIL;
 	}
 	if (SUCCESS == status) {
@@ -858,10 +866,10 @@ GenerateApEapolMsg(hostsa_private *priv,
 
 	if (SUCCESS == status) {
 		connPtr->staData.keyMgmtInfo.numHskTries++;
-		/* we are starting the timer irrespective of whether the msg
-		   generation is sucessful or not. This is because, if the msg
-		   generation fails because of buffer unavailabilty then we can
-		   re-try the msg after the timeout period. */
+		/* we are starting the timer irrespective of whether the msg generation is
+		   sucessful or not. This is because, if the msg generation fails because
+		   of buffer unavailabilty then we can re-try the msg after the timeout
+		   period. */
 		if (!connPtr->timer_is_set)
 			KeyMgmtStartHskTimer(connPtr);
 	}
@@ -880,7 +888,7 @@ ApMicErrTimerExpCb(t_void *context)
 	apInfo_t *pApInfo;
 
 	if (connPtr == NULL) {
-		// no AP connection. Do nothing, just return
+		//no AP connection. Do nothing, just return
 		return;
 	}
 	priv = (phostsa_private)connPtr->priv;
@@ -931,22 +939,20 @@ ApMicCounterMeasureInvoke(t_void *pconnPtr)
 			connPtr->staData.apMicError.disableStaAsso = 1;
 			connPtr->staData.apMicError.status =
 				SECOND_MIC_FAIL_IN_60_SEC;
-			// start timer for 60 seconds
+			//start timer for 60 seconds
 			util_fns->moal_stop_timer(util_fns->pmoal_handle,
 						  connPtr->staData.apMicTimer);
 			util_fns->moal_start_timer(util_fns->pmoal_handle,
 						   connPtr->staData.apMicTimer,
 						   MFALSE, MRVDRV_TIMER_60S);
 
-			/* smeAPStateMgr_sendSmeMsg(connPtr,
-			   MlmeApBcastDisassoc); */
+			/*  smeAPStateMgr_sendSmeMsg(connPtr, MlmeApBcastDisassoc); */
 			pm_fns->Hostsa_DisAssocAllSta(priv->pmlan_private,
 						      IEEEtypes_REASON_MIC_FAILURE);
 			// if current GTK is tkip
 			if ((pApInfo->bssConfig.RsnConfig.mcstCipher.tkip) &&
 			    IsAuthenticatorEnabled(priv)) {
-				// Disable periodic group rekey and re-init
-				// GTK.
+				//Disable periodic group rekey and re-init GTK.
 				priv->GrpRekeyTimerIsSet = MFALSE;
 				pApInfo->bssData.grpRekeyCntRemaining = 0;
 				ReInitGTK(priv);

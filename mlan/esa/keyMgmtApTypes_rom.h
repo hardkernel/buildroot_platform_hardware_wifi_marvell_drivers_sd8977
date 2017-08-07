@@ -2,7 +2,7 @@
  *
  *  @brief This file contains the key management type for ap
  *
- * Copyright (C) 2014-2016, Marvell International Ltd.
+ * Copyright (C) 2014-2017, Marvell International Ltd.
  *
  * This software file (the "File") is distributed by Marvell International
  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
@@ -31,8 +31,7 @@ Change log:
 #define KDE_IE_SIZE  (2)	// type+length of KDE_t
 #define KDE_SIZE     (KDE_IE_SIZE + 4 )	// OUI+datatype of KDE_t
 #define GTK_IE_SIZE (2)
-#define KEYDATA_SIZE (4 + GTK_IE_SIZE + TK_SIZE)	// OUI+datatype+
-							// GTK_IE+ GTK
+#define KEYDATA_SIZE (4 + GTK_IE_SIZE + TK_SIZE)	//OUI+datatype+ GTK_IE+ GTK
 
 typedef enum {
 	HSK_NOT_STARTED,
@@ -44,9 +43,10 @@ typedef enum {
 	WAITING_4_GRPMSG2,
 	GRP_REKEY_MSG1_PENDING,
 	WAITING_4_GRP_REKEY_MSG2,
-	/* the relative positions of the different enum elements ** should not
-	   be changed since FW code checks for even/odd ** values at certain
-	   places. */
+	/* the relative positions of the different enum elements
+	 ** should not be changed since FW code checks for even/odd
+	 ** values at certain places.
+	 */
 	HSK_DUMMY_STATE,
 	HSK_END
 } keyMgmtState_e;

@@ -2,7 +2,7 @@
   *
   * @brief This file contains wireless extension standard ioctl functions
   *
-  * Copyright (C) 2008-2016, Marvell International Ltd.
+  * Copyright (C) 2008-2017, Marvell International Ltd.
   *
   * This software file (the "File") is distributed by Marvell International
   * Ltd. under the terms of the GNU General Public License Version 2, June 1991
@@ -481,7 +481,8 @@ woal_set_wap(struct net_device *dev, struct iw_request_info *info,
 
 	/* zero_mac means disconnect */
 	if (!memcmp(zero_mac, awrq->sa_data, MLAN_MAC_ADDR_LENGTH)) {
-		woal_disconnect(priv, MOAL_IOCTL_WAIT, NULL);
+		woal_disconnect(priv, MOAL_IOCTL_WAIT, NULL,
+				DEF_DEAUTH_REASON_CODE);
 		goto done;
 	}
 
@@ -1549,7 +1550,8 @@ woal_set_mlme(struct net_device *dev,
 
 		if (MLAN_STATUS_SUCCESS !=
 		    woal_disconnect(priv, MOAL_IOCTL_WAIT,
-				    (t_u8 *)mlme->addr.sa_data))
+				    (t_u8 *)mlme->addr.sa_data,
+				    DEF_DEAUTH_REASON_CODE))
 			ret = -EFAULT;
 	}
 	LEAVE();
@@ -1640,7 +1642,7 @@ woal_set_auth(struct net_device *dev, struct iw_request_info *info,
 	case IW_AUTH_RX_UNENCRYPTED_EAPOL:
 	case IW_AUTH_ROAMING_CONTROL:
 	case IW_AUTH_PRIVACY_INVOKED:
-#if LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 29)
+#if CFG80211_VERSION_CODE > KERNEL_VERSION(2, 6, 29)
 	case IW_AUTH_MFP:
 #endif
 		break;
@@ -1857,7 +1859,7 @@ woal_get_range(struct net_device *dev, struct iw_request_info *info,
 /** Maximum power period */
 #define IW_POWER_PERIOD_MAX 120000000	/* 2 min */
 /** Minimum power timeout value */
-#define IW_POWER_TIMEOUT_MIN 1000	/* 1 ms */
+#define IW_POWER_TIMEOUT_MIN 1000	/* 1 ms  */
 /** Maximim power timeout value */
 #define IW_POWER_TIMEOUT_MAX 1000000	/* 1 sec */
 
@@ -2455,7 +2457,8 @@ woal_set_essid(struct net_device *dev, struct iw_request_info *info,
 	mode = woal_get_mode(priv, MOAL_IOCTL_WAIT);
 	if (mode == IW_MODE_ADHOC)
 		/* disconnect before try to associate */
-		woal_disconnect(priv, MOAL_IOCTL_WAIT, NULL);
+		woal_disconnect(priv, MOAL_IOCTL_WAIT, NULL,
+				DEF_DEAUTH_REASON_CODE);
 
 	if (mode != IW_MODE_ADHOC) {
 		if (MLAN_STATUS_SUCCESS !=
@@ -2629,9 +2632,11 @@ woal_get_scan(struct net_device *dev, struct iw_request_info *info,
 	       (int)scan_resp.num_in_scan_table);
 
 #if WIRELESS_EXT > 13
-	/* The old API using SIOCGIWAPLIST had a hard limit of IW_MAX_AP. The
-	   new API using SIOCGIWSCAN is only limited by buffer size WE-14 ->
-	   WE-16 the buffer is limited to IW_SCAN_MAX_DATA bytes which is 4096. */
+	/* The old API using SIOCGIWAPLIST had a hard limit of
+	 * IW_MAX_AP. The new API using SIOCGIWSCAN is only
+	 * limited by buffer size WE-14 -> WE-16 the buffer is
+	 * limited to IW_SCAN_MAX_DATA bytes which is 4096.
+	 */
 	for (i = 0; i < MIN(scan_resp.num_in_scan_table, 64); i++) {
 		if ((current_ev + MAX_SCAN_CELL_SIZE) >= end_buf) {
 			PRINTM(MINFO,
@@ -2649,8 +2654,7 @@ woal_get_scan(struct net_device *dev, struct iw_request_info *info,
 		PRINTM(MINFO, "i=%d  Ssid: %-32s\n", i,
 		       scan_table[i].ssid.ssid);
 
-		/* check ssid is valid or not, ex. hidden ssid will be filter
-		   out */
+		/* check ssid is valid or not, ex. hidden ssid will be filter out */
 		if (woal_ssid_valid(&scan_table[i].ssid) == MFALSE)
 			continue;
 
@@ -2943,7 +2947,7 @@ static const iw_handler woal_handler[] = {
 	(iw_handler) woal_set_wap,	/* SIOCSIWAP */
 	(iw_handler) woal_get_wap,	/* SIOCGIWAP */
 #if WIRELESS_EXT >= 18
-	(iw_handler) woal_set_mlme,	/* SIOCSIWMLME */
+	(iw_handler) woal_set_mlme,	/* SIOCSIWMLME  */
 #else
 	(iw_handler) NULL,	/* -- hole -- */
 #endif
@@ -2981,8 +2985,8 @@ static const iw_handler woal_handler[] = {
 	(iw_handler) NULL,	/* -- hole -- */
 	(iw_handler) woal_set_gen_ie,	/* SIOCSIWGENIE */
 	(iw_handler) woal_get_gen_ie,	/* SIOCGIWGENIE */
-	(iw_handler) woal_set_auth,	/* SIOCSIWAUTH */
-	(iw_handler) woal_get_auth,	/* SIOCGIWAUTH */
+	(iw_handler) woal_set_auth,	/* SIOCSIWAUTH  */
+	(iw_handler) woal_get_auth,	/* SIOCGIWAUTH  */
 	(iw_handler) woal_set_encode_ext,	/* SIOCSIWENCODEEXT */
 	(iw_handler) woal_get_encode_ext,	/* SIOCGIWENCODEEXT */
 	(iw_handler) woal_set_pmksa,	/* SIOCSIWPMKSA */
@@ -3095,10 +3099,11 @@ struct iw_statistics *
 woal_get_wireless_stats(struct net_device *dev)
 {
 	moal_private *priv = (moal_private *)netdev_priv(dev);
-	t_u16 wait_option = MOAL_NO_WAIT;
+	t_u16 wait_option = MOAL_WSTATS_WAIT;
 
 	ENTER();
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 31)
 	/*
 	 * Since schedule() is not allowed from an atomic context
 	 * such as when dev_base_lock for netdevices is acquired
@@ -3106,9 +3111,9 @@ woal_get_wireless_stats(struct net_device *dev)
 	 * is issued in non-blocking way in such contexts and
 	 * blocking in other cases.
 	 */
-	if (write_can_lock(&dev_base_lock)
-	    && (!in_atomic() || current->exit_state))
-		wait_option = MOAL_WSTATS_WAIT;
+	if (in_atomic() || !write_can_lock(&dev_base_lock))
+		wait_option = MOAL_NO_WAIT;
+#endif
 
 	priv->w_stats.status = woal_get_mode(priv, wait_option);
 	priv->w_stats.discard.retries = priv->stats.tx_errors;

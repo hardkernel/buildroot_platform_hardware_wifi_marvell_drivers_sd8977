@@ -2,7 +2,7 @@
  *
  *  @brief This file defines function for pmk cache
  *
- * Copyright (C) 2014-2016, Marvell International Ltd.
+ * Copyright (C) 2014-2017, Marvell International Ltd.
  *
  * This software file (the "File") is distributed by Marvell International
  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
@@ -57,16 +57,17 @@ pmkCacheNewElement(void *priv)
 	UINT8 index;
 	pmkElement_t *pPMK = NULL;
 
-#if 0				// !defined(REMOVE_PATCH_HOOKS)
+#if 0				//!defined(REMOVE_PATCH_HOOKS)
 	if (pmkCacheNewElement_hook(&pPMK)) {
 		return pPMK;
 	}
 #endif
 
 	for (index = 0; index < ramHook_MAX_PMK_CACHE_ENTRIES; index++) {
-		/* If the cache is full the least recently used entry ** will
-		   be replaced.  Decrement all the replacement ranks ** to have
-		   a free cache entry. */
+		/* If the cache is full the least recently used entry
+		 ** will be replaced.  Decrement all the replacement ranks
+		 ** to have a free cache entry.
+		 */
 		if (ramHook_MAX_PMK_CACHE_ENTRIES == replacementRankMax) {
 			(ramHook_pmkCache[index].replacementRank)--;
 		}
@@ -81,8 +82,7 @@ pmkCacheNewElement(void *priv)
 			memset(util_fns, pPMK, 0x00, sizeof(pmkElement_t));
 
 			if (ramHook_MAX_PMK_CACHE_ENTRIES > replacementRankMax) {
-				/* Cache isn't full so increment the max
-				   possible rank */
+				/* Cache isn't full so increment the max possible rank */
 				replacementRankMax++;
 			}
 
@@ -132,15 +132,17 @@ pmkCacheFindPMKElement(void *priv, IEEEtypes_MacAddr_t *pBssid)
 	UINT8 index = 0;
 	pmkElement_t *pPMKElement = NULL;
 
-#if 0				// !defined(REMOVE_PATCH_HOOKS)
+#if 0				//!defined(REMOVE_PATCH_HOOKS)
 	if (pmkCacheFindPMKElement_hook(pBssid, &pPMKElement)) {
 		return pPMKElement;
 	}
 #endif
 
 	for (index = 0; index < ramHook_MAX_PMK_CACHE_ENTRIES; index++) {
-		/* See if the entry is valid. ** See if the entry is a PMK **
-		   See if the BSSID matches */
+		/* See if the entry is valid.
+		 ** See if the entry is a PMK
+		 ** See if the BSSID matches
+		 */
 		if (ramHook_pmkCache[index].replacementRank > 0
 		    && ramHook_pmkCache[index].length == BSSID_FLAG
 		    && (0 == memcmp(util_fns, ramHook_pmkCache[index].key.Bssid,
@@ -151,8 +153,9 @@ pmkCacheFindPMKElement(void *priv, IEEEtypes_MacAddr_t *pBssid)
 		}
 	}
 
-	/* Update the rank if an entry is found.  Null is an accepted ** input
-	   for the function */
+	/* Update the rank if an entry is found.  Null is an accepted
+	 ** input for the function
+	 */
 	pmkCacheUpdateReplacementRank(pPMKElement);
 
 	return pPMKElement;
@@ -176,15 +179,17 @@ pmkCacheFindPSKElement(void *priv, UINT8 *pSsid, UINT8 ssidLen)
 	UINT8 index = 0;
 	pmkElement_t *pPMKElement = NULL;
 
-#if 0				// !defined(REMOVE_PATCH_HOOKS)
+#if 0				//!defined(REMOVE_PATCH_HOOKS)
 	if (pmkCacheFindPSKElement_hook(pSsid, ssidLen, &pPMKElement)) {
 		return pPMKElement;
 	}
 #endif
 
 	for (index = 0; index < ramHook_MAX_PMK_CACHE_ENTRIES; index++) {
-		/* See if the entry is valid. ** See if the entry is a PSK **
-		   See if the SSID matches */
+		/* See if the entry is valid.
+		 ** See if the entry is a PSK
+		 ** See if the SSID matches
+		 */
 		if (ramHook_pmkCache[index].replacementRank
 		    && ramHook_pmkCache[index].length == ssidLen
 		    && (0 == memcmp(util_fns, ramHook_pmkCache[index].key.Ssid,
@@ -193,8 +198,9 @@ pmkCacheFindPSKElement(void *priv, UINT8 *pSsid, UINT8 ssidLen)
 		}
 	}
 
-	/* Update the rank if an entry is found.  Null is an accepted ** input
-	   for the function */
+	/* Update the rank if an entry is found.  Null is an accepted
+	 ** input for the function
+	 */
 	pmkCacheUpdateReplacementRank(pPMKElement);
 
 	return pPMKElement;
@@ -221,7 +227,7 @@ pmkCacheAddPMK(void *priv, IEEEtypes_MacAddr_t *pBssid, UINT8 *pPMK)
 	hostsa_util_fns *util_fns = &psapriv->util_fns;
 	pmkElement_t *pPMKElement;
 
-#if 0				// !defined(REMOVE_PATCH_HOOKS)
+#if 0				//!defined(REMOVE_PATCH_HOOKS)
 	if (pmkCacheAddPMK_hook(pBssid, pPMK)) {
 		return;
 	}
@@ -237,8 +243,9 @@ pmkCacheAddPMK(void *priv, IEEEtypes_MacAddr_t *pBssid, UINT8 *pPMK)
 		memcpy(util_fns, pPMKElement->key.Bssid,
 		       pBssid, sizeof(pPMKElement->key.Bssid));
 
-		/* Set the length to a value that is invalid for ** an SSID.
-		   The invalid value will flag the entry as a PMK */
+		/* Set the length to a value that is invalid for
+		 ** an SSID.  The invalid value will flag the entry as a PMK
+		 */
 		pPMKElement->length = BSSID_FLAG;
 	}
 
@@ -255,7 +262,7 @@ pmkCacheAddPSK(void *priv, UINT8 *pSsid, UINT8 ssidLen, UINT8 *pPSK,
 	hostsa_util_fns *util_fns = &psapriv->util_fns;
 	pmkElement_t *pPMKElement;
 
-#if 0				// !defined(REMOVE_PATCH_HOOKS)
+#if 0				//!defined(REMOVE_PATCH_HOOKS)
 	if (pmkCacheAddPSK_hook(pSsid, ssidLen, pPSK)) {
 		return;
 	}
@@ -292,9 +299,10 @@ pmkCacheDeletePMK(void *priv, t_u8 *pBssid)
 		pmkCacheFindPMKElement(priv, (IEEEtypes_MacAddr_t *)pBssid);
 
 	if (pPMKElement) {
-		/* Invalidate the enrty by setting the memory for the ** cache
-		   entry to zero. ** This will ensure that the replacementRank
-		   is zero */
+		/* Invalidate the enrty by setting the memory for the
+		 ** cache entry to zero.
+		 ** This will ensure that the replacementRank is zero
+		 */
 		memset(util_fns, pPMKElement, 0x00, sizeof(pmkElement_t));
 		replacementRankMax--;
 	}
@@ -309,9 +317,10 @@ pmkCacheDeletePSK(void *priv, UINT8 *pSsid, UINT8 ssidLen)
 		pmkCacheFindPSKElement(priv, pSsid, ssidLen);
 
 	if (pPMKElement) {
-		/* Invalidate the enrty by setting the memory for the ** cache
-		   entry to zero. ** This will ensure that the replacementRank
-		   is zero */
+		/* Invalidate the enrty by setting the memory for the
+		 ** cache entry to zero.
+		 ** This will ensure that the replacementRank is zero
+		 */
 		memset(util_fns, pPMKElement, 0x00, sizeof(pmkElement_t));
 		replacementRankMax--;
 	}
@@ -337,7 +346,7 @@ pmkCacheGeneratePSK(void *priv, UINT8 *pSsid,
 {
 	int i;
 
-#if 0				// !defined(REMOVE_PATCH_HOOKS)
+#if 0				//!defined(REMOVE_PATCH_HOOKS)
 	if (pmkCacheGeneratePSK_hook(pSsid, ssidLen, pPassphrase, pPSK)) {
 		return;
 	}
@@ -352,10 +361,10 @@ pmkCacheGeneratePSK(void *priv, UINT8 *pSsid,
 
 		if (i > 7 && i < PSK_PASS_PHRASE_LEN_MAX) {
 			/* bump the CPU speed for the PSK generation */
-			// ramHook_hal_SetCpuMaxSpeed();
+			//ramHook_hal_SetCpuMaxSpeed();
 			Mrvl_PasswordHash((void *)priv, pPassphrase,
 					  (UINT8 *)pSsid, ssidLen, pPSK);
-			// ramHook_hal_RestoreCpuSpeed();
+			//ramHook_hal_RestoreCpuSpeed();
 		} else if (i == PSK_PASS_PHRASE_LEN_MAX) {
 			/* Convert ASCII to binary */
 			for (i = 0; i < PSK_PASS_PHRASE_LEN_MAX; i += 2) {

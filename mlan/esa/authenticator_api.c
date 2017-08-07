@@ -2,7 +2,7 @@
  *
  *  @brief This file defines the main APIs for authenticator.
  *
- * Copyright (C) 2014-2016, Marvell International Ltd.
+ * Copyright (C) 2014-2017, Marvell International Ltd.
  *
  * This software file (the "File") is distributed by Marvell International
  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
@@ -103,12 +103,18 @@ t_u8
 IsAuthenticatorEnabled(void *priv)
 {
 	phostsa_private psapriv = (phostsa_private)priv;
-	apInfo_t *pApInfo = &psapriv->apinfo;
+	apInfo_t *pApInfo = NULL;
 	apRsnConfig_t *pRsnConfig = NULL;
 	t_u8 ret = 0;
 
 	ENTER();
 
+	if (!psapriv) {
+		LEAVE();
+		return ret;
+	}
+
+	pApInfo = &psapriv->apinfo;
 	if (pApInfo == NULL) {
 		LEAVE();
 		return ret;
@@ -138,13 +144,19 @@ void
 AuthenitcatorInitBssConfig(void *priv)
 {
 	phostsa_private psapriv = (phostsa_private)priv;
-	hostsa_util_fns *util_fns = &psapriv->util_fns;
-	apInfo_t *pApInfo = &psapriv->apinfo;
+	hostsa_util_fns *util_fns = MNULL;
+	apInfo_t *pApInfo = MNULL;
 	BssConfig_t *pBssConfig = MNULL;
 	apRsnConfig_t *pRsnConfig = MNULL;
 
 	ENTER();
 
+	if (!psapriv) {
+		LEAVE();
+		return;
+	}
+	util_fns = &psapriv->util_fns;
+	pApInfo = &psapriv->apinfo;
 	pBssConfig = &pApInfo->bssConfig;
 	pRsnConfig = &pBssConfig->RsnConfig;
 
@@ -372,15 +384,23 @@ AuthenticatorBssConfig(void *priv, t_u8 *pbss_config, t_u8 appendIE,
 		       t_u8 clearIE, t_u8 SetConfigToMlan)
 {
 	phostsa_private psapriv = (phostsa_private)priv;
-	hostsa_util_fns *util_fns = &psapriv->util_fns;
-	hostsa_mlan_fns *pm_fns = &psapriv->mlan_fns;
-	apInfo_t *pApInfo = &psapriv->apinfo;
+	hostsa_util_fns *util_fns = MNULL;
+	hostsa_mlan_fns *pm_fns = MNULL;
+	apInfo_t *pApInfo = MNULL;
 	BssConfig_t *pBssConfig = MNULL;
 	apRsnConfig_t *pRsnConfig = MNULL;
 	t_u16 ielen = 0;
 	t_u8 ret = 0;
 
 	ENTER();
+
+	if (!psapriv) {
+		LEAVE();
+		return ret;
+	}
+	util_fns = &psapriv->util_fns;
+	pm_fns = &psapriv->mlan_fns;
+	pApInfo = &psapriv->apinfo;
 
 	pBssConfig = &pApInfo->bssConfig;
 	pRsnConfig = &pBssConfig->RsnConfig;
@@ -639,7 +659,7 @@ AuthenticatorSendEapolPacket(t_void *priv, t_void *pconnPtr)
 	initMicErrorParams(pApInfo->bssConfig.SecType.wpa,
 			   &connPtr->staData.apMicError);
 	connPtr->staData.keyMgmtInfo.rom.keyMgmtState = MSG1_PENDING;
-	// If it is in **_pending state
+	//If it is in **_pending state
 	if (((connPtr->staData.keyMgmtInfo.rom.keyMgmtState) & 0x1) != 0) {
 		GenerateApEapolMsg(psapriv, connPtr,
 				   connPtr->staData.keyMgmtInfo.rom.
@@ -845,6 +865,9 @@ supplicant_authenticator_free(t_void *phostsa_priv)
 	hostsa_util_fns *putil_fns = &priv->util_fns;
 
 	ENTER();
+
+	if (!phostsa_priv)
+		goto done;
 #ifdef DRV_EMBEDDED_SUPPLICANT
 	freeSupplicantData(priv);
 	freeSupplicantTimer(priv);
@@ -856,7 +879,7 @@ supplicant_authenticator_free(t_void *phostsa_priv)
 				   priv->GrpRekeytimer);
 #endif
 	free(putil_fns, (t_u8 *)priv);
-
+done:
 	LEAVE();
 	return ret;
 }

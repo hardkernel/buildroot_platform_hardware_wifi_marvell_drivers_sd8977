@@ -2,7 +2,7 @@
  *
  *  @brief This file defines AES based functions.
  *
- * Copyright (C) 2014-2016, Marvell International Ltd.
+ * Copyright (C) 2014-2017, Marvell International Ltd.
  *
  * This software file (the "File") is distributed by Marvell International
  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
@@ -133,7 +133,7 @@ extern const u32 Td3[256];
 #define GETU32(pt) (((u32)(pt)[0] << 24) ^ ((u32)(pt)[1] << 16) ^ ((u32)(pt)[2] <<  8) ^ ((u32)(pt)[3]))
 
 static int
-rijndaelKeySetupEnc_2(u32 rk[ /* 4*(Nr + 1) */ ], const u8 cipherKey[],
+rijndaelKeySetupEnc_2(u32 rk[ /*4*(Nr + 1) */ ], const u8 cipherKey[],
 		      int keyBits)
 {
 	int i = 0;
@@ -217,7 +217,7 @@ rijndaelKeySetupEnc_2(u32 rk[ /* 4*(Nr + 1) */ ], const u8 cipherKey[],
 }
 
 static int
-rijndaelKeySetupDec_2(u32 rk[ /* 4*(Nr + 1) */ ], const u8 cipherKey[],
+rijndaelKeySetupDec_2(u32 rk[ /*4*(Nr + 1) */ ], const u8 cipherKey[],
 		      int keyBits, int have_encrypt)
 {
 	int Nr, i, j;
@@ -244,8 +244,7 @@ rijndaelKeySetupDec_2(u32 rk[ /* 4*(Nr + 1) */ ], const u8 cipherKey[],
 		rk[i + 3] = rk[j + 3];
 		rk[j + 3] = temp;
 	}
-	/* apply the inverse MixColumn transform to all round keys but the
-	   first and the last: */
+	/* apply the inverse MixColumn transform to all round keys but the first and the last: */
 	for (i = 1; i < Nr; i++) {
 		rk += 4;
 		rk[0] = Td0[Te4[(rk[0] >> 24)]] ^
@@ -294,10 +293,10 @@ rijndael_set_key_2(rijndael_ctx *ctx, u8 *key, int bits, int encrypt)
 int
 MRVL_AesEncrypt(UINT8 *kek, UINT8 kekLen, UINT8 *data, UINT8 *ret)
 {
-	// BufferDesc_t * pDesc = NULL;
+	//BufferDesc_t * pDesc = NULL;
 	UINT8 buf[400] = { 0 };
 	rijndael_ctx *ctx;
-#if 0				// !defined(REMOVE_PATCH_HOOKS)
+#if 0				//!defined(REMOVE_PATCH_HOOKS)
 	int ptr_val;
 
 	if (MRVL_AesEncrypt_hook(kek, kekLen, data, ret, &ptr_val)) {
@@ -309,7 +308,7 @@ MRVL_AesEncrypt(UINT8 *kek, UINT8 kekLen, UINT8 *data, UINT8 *ret)
 	pDesc = (BufferDesc_t *) bml_AllocBuffer(ramHook_encrPoolConfig,
 						 400, BML_WAIT_FOREVER);
 #endif
-	// ctx = (rijndael_ctx *)BML_DATA_PTR(pDesc);
+	//ctx = (rijndael_ctx *)BML_DATA_PTR(pDesc);
 	ctx = (rijndael_ctx *)buf;
 #ifdef WAR_ROM_BUG64609_SUPPORT_24_32_BYTES_KEY_LENGTH
 	rijndael_set_key_2(ctx, (UINT8 *)kek, kekLen * 64, 1);
@@ -352,7 +351,7 @@ MRVL_AesWrap(UINT8 *kek, UINT8 kekLen, UINT32 n,
 	int i = 0;
 	int j = 0;
 	UINT8 *r = NULL;
-#if 0				// !defined(REMOVE_PATCH_HOOKS)
+#if 0				//!defined(REMOVE_PATCH_HOOKS)
 	int ptr_val;
 
 	if (MRVL_AesWrap_hook(kek, kekLen, n, plain, keyIv, cipher, &ptr_val)) {
@@ -360,7 +359,8 @@ MRVL_AesWrap(UINT8 *kek, UINT8 kekLen, UINT32 n,
 	}
 #endif
 
-	/* 0: before everything, check n value */
+	/* 0: before everything, check n value
+	 */
 	if (1 > n) {
 		return -1;
 	}
@@ -376,9 +376,13 @@ MRVL_AesWrap(UINT8 *kek, UINT8 kekLen, UINT32 n,
 	}
 	MRVL_AES_MEMCPY(r, plain, (8 * n));
 
-	/* 2: calculate intermediate values For j = 0 to 5 For i=1 to n B =
-	   AES(K, A | R[i]) A = MSB(64, B) ^ t where t = (n*j)+i R[i] = LSB(64,
-	   B) */
+	/* 2: calculate intermediate values
+	 * For j = 0 to 5
+	 *  For i=1 to n
+	 *      B = AES(K, A | R[i])
+	 *      A = MSB(64, B) ^ t where t = (n*j)+i
+	 *              R[i] = LSB(64, B)
+	 */
 	for (j = 0; j <= 5; j++) {
 		r = cipher + 8;
 		for (i = 1; i <= n; i++) {
@@ -394,7 +398,9 @@ MRVL_AesWrap(UINT8 *kek, UINT8 kekLen, UINT32 n,
 
 	MRVL_AES_MEMCPY(cipher, a, 8);
 
-	/* 3: output the results these are already in @cipher */
+	/* 3: output the results
+	 * these are already in @cipher
+	 */
 
 	return 0;
 }
@@ -428,11 +434,11 @@ MRVL_AesUnWrap(UINT8 *kek, UINT8 kekLen, UINT32 n,
 	int j = 0;
 	UINT8 a[8];
 	UINT8 *r = NULL;
-	// BufferDesc_t * pDesc = NULL;
+	//BufferDesc_t * pDesc = NULL;
 	UINT8 buf[400] = { 0 };
 
 	rijndael_ctx *ctx;
-#if 0				// !defined(REMOVE_PATCH_HOOKS)
+#if 0				//!defined(REMOVE_PATCH_HOOKS)
 	int ptr_val;
 
 	if (MRVL_AesUnWrap_hook(kek, kekLen, n, cipher, keyIv, plain, &ptr_val)) {
@@ -440,7 +446,8 @@ MRVL_AesUnWrap(UINT8 *kek, UINT8 kekLen, UINT32 n,
 	}
 #endif
 
-	/* 0: before everything, check n value */
+	/* 0: before everything, check n value
+	 */
 	if (1 > n) {
 		return -1;
 	}
@@ -456,7 +463,7 @@ MRVL_AesUnWrap(UINT8 *kek, UINT8 kekLen, UINT32 n,
 	pDesc = (BufferDesc_t *) bml_AllocBuffer(ramHook_encrPoolConfig,
 						 400, BML_WAIT_FOREVER);
 #endif
-	// ctx = (rijndael_ctx *)BML_DATA_PTR(pDesc);
+	//ctx = (rijndael_ctx *)BML_DATA_PTR(pDesc);
 	ctx = (rijndael_ctx *)buf;
 #ifdef WAR_ROM_BUG64609_SUPPORT_24_32_BYTES_KEY_LENGTH
 	rijndael_set_key_2(ctx, (UINT8 *)kek, kekLen * 64, 0);
@@ -464,9 +471,13 @@ MRVL_AesUnWrap(UINT8 *kek, UINT8 kekLen, UINT32 n,
 	rijndael_set_key(ctx, (UINT8 *)kek, kekLen * 64, 0);
 #endif	   /** WAR_ROM_BUG64609_SUPPORT_24_32_BYTES_KEY_LENGTH */
 
-	/* 2: compute intermediate values For j = 5 to 0 For i = n to 1 B =
-	   AES-1(K, (A ^ t) | R[i]) where t = n*j+i A = MSB(64, B) R[i] =
-	   LSB(64, B) */
+	/* 2: compute intermediate values
+	 * For j = 5 to 0
+	 *     For i = n to 1
+	 *         B = AES-1(K, (A ^ t) | R[i]) where t = n*j+i
+	 *         A = MSB(64, B)
+	 *         R[i] = LSB(64, B)
+	 */
 	for (j = 5; j >= 0; j--) {
 		r = plain + (n - 1) * 8;
 		for (i = n; i >= 1; i--) {
@@ -509,7 +520,7 @@ MRVL_AesValidateHostRequest(UINT32 *pBitMap, UINT8 *pCmdPtr,
 {
 	host_MRVL_AES_CRYPT_t *pLocal = NULL;
 	MrvlIEParamSet_t *pLocalIEParam = NULL;
-#if 0				// !defined(REMOVE_PATCH_HOOKS)
+#if 0				//!defined(REMOVE_PATCH_HOOKS)
 	int ptr_val;
 
 	if (MRVL_AesValidateHostRequest_hook(pBitMap,
@@ -654,7 +665,7 @@ MRVL_AesPrimitiveEncrypt(MRVL_ENDECRYPT_t *crypt, int *pErr)
 	host_MRVL_AES_CRYPT_t *pLocal = NULL;
 	MrvlIEAesCrypt_t *pLocalIEParam = NULL;
 
-#if 0				// !defined(REMOVE_PATCH_HOOKS)
+#if 0				//!defined(REMOVE_PATCH_HOOKS)
 	if (MRVL_AesPrimitiveEncrypt_hook(crypt, pErr)) {
 		return;
 	}
@@ -696,7 +707,7 @@ MRVL_AesPrimitiveDecrypt(MRVL_ENDECRYPT_t *crypt, int *pErr)
 	BufferDesc_t *pDesc;
 	rijndael_ctx *ctx;
 
-#if 0				// !defined(REMOVE_PATCH_HOOKS)
+#if 0				//!defined(REMOVE_PATCH_HOOKS)
 	if (MRVL_AesPrimitiveDecrypt_hook(crypt, pErr)) {
 		return;
 	}
@@ -749,7 +760,7 @@ MRVL_AesWrapEncrypt(MRVL_ENDECRYPT_t *crypt, int *pErr)
 	host_MRVL_AES_CRYPT_t *pLocal = NULL;
 	MrvlIEAesCrypt_t *pLocalIEParam = NULL;
 
-#if 0				// !defined(REMOVE_PATCH_HOOKS)
+#if 0				//!defined(REMOVE_PATCH_HOOKS)
 	if (MRVL_AesWrapEncrypt_hook(crypt, pErr)) {
 		return;
 	}
@@ -799,7 +810,7 @@ MRVL_AesWrapDecrypt(MRVL_ENDECRYPT_t *crypt, int *pErr)
 	host_MRVL_AES_CRYPT_t *pLocal = NULL;
 	MrvlIEAesCrypt_t *pLocalIEParam = NULL;
 
-#if 0				// !defined(REMOVE_PATCH_HOOKS)
+#if 0				//!defined(REMOVE_PATCH_HOOKS)
 	if (MRVL_AesWrapDecrypt_hook(crypt, pErr)) {
 		return;
 	}

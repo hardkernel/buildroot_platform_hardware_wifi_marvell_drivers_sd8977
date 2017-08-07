@@ -2,7 +2,7 @@
  *
  *  @brief This file contains the data structure for authenticator and supplicant.
  *
- * Copyright (C) 2014-2016, Marvell International Ltd.
+ * Copyright (C) 2014-2017, Marvell International Ltd.
  *
  * This software file (the "File") is distributed by Marvell International
  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
@@ -70,16 +70,16 @@ typedef struct {
 } customMIB_RSNStats_t;
 
 typedef struct {
-	UINT8 kck[16];		/* PTK_KCK = L(PTK, 0, 128); */
+	UINT8 kck[16];		/* PTK_KCK = L(PTK,   0, 128); */
 	UINT8 kek[16];		/* PTK_KEK = L(PTK, 128, 128); */
-	UINT8 tk[16];		/* PTK_TK = L(PTK, 256, 128); */
+	UINT8 tk[16];		/* PTK_TK  = L(PTK, 256, 128); */
 
 } CcmPtk_t;
 
 typedef struct {
-	UINT8 kck[16];		/* PTK_KCK = L(PTK, 0, 128); */
+	UINT8 kck[16];		/* PTK_KCK = L(PTK,   0, 128); */
 	UINT8 kek[16];		/* PTK_KEK = L(PTK, 128, 128); */
-	UINT8 tk[16];		/* PTK_TK = L(PTK, 256, 128); */
+	UINT8 tk[16];		/* PTK_TK  = L(PTK, 256, 128); */
 	UINT8 rxMicKey[8];
 	UINT8 txMicKey[8];
 
@@ -91,18 +91,17 @@ typedef struct {
 
 	UINT32 ageOutCnt;
 	UINT32 stateInfo;
-	// key mgmt data
+	//key mgmt data
 	apKeyMgmtInfoSta_t keyMgmtInfo;
 
 	t_u8 RSNEnabled;
 	UINT16 deauthReason;
 
 	UINT8 txPauseState;
-	// RateChangeInfo[] is used by MAC HW to decide the start TX rate.
-	// It should be placed in SQ. If staData_t is placed in ITCM/DTCM then
-	// put
-	// staRateTable in SQ and use a pointer here
-	// staRateTable RateChangeInfo;
+	//RateChangeInfo[] is used by MAC HW to decide the start TX rate.
+	//It should be placed in SQ. If staData_t is placed in ITCM/DTCM then put
+	//staRateTable in SQ and use a pointer here
+	//staRateTable RateChangeInfo;
 	UINT16 stickyTimCount;
 	BOOLEAN stickyTimEnabled;
 
@@ -137,9 +136,10 @@ typedef struct {
 	UINT8 GNonce[32];
 
 	/* Following two variables contain that multiple of BI which is just
-	   ** greater than user configured ageout time in normal and PS mode.
-	   These ** variables get updated at bss_start, and then are used
-	   whenever FW ** resets STA age. */
+	 ** greater than user configured ageout time in normal and PS mode. These
+	 ** variables get updated at bss_start, and then are used whenever FW
+	 ** resets STA age.
+	 */
 	UINT32 staAgeOutBcnCnt;
 	UINT32 psStaAgeOutBcnCnt;
 
@@ -223,10 +223,10 @@ typedef struct {
 
 	/* If the BssAddr field is not aligned on word boundary the hal
 	   functions which update mac registers are unsafe for non-word
-	   aligned pointers. Avoid direct use of the pointer to BssId field in
-	   the hal functions */
-	/* this field is no longer used and we use mibOpdata_p->StaMacAddr in
-	   its place now */
+	   aligned pointers. Avoid direct use of the pointer to BssId
+	   field in the hal functions */
+	/*  this field is no longer used and we use mibOpdata_p->StaMacAddr
+	   in its place now */
 	IEEEtypes_MacAddr_t EepromMacAddr_defunct;
 	IEEEtypes_DataRate_t OpRateSet[IEEEtypes_MAX_DATA_RATES_G];
 
@@ -238,8 +238,7 @@ typedef struct {
 	UINT8 MaxStaSupported;
 
 	SecurityMode_t SecType;
-	UINT8 Padding1[1];	// ****** Use this for adding new members
-				// *******
+	UINT8 Padding1[1];	//****** Use this for adding new members *******
 	BOOLEAN apWmmEn;
 	IEEEtypes_WMM_ParamElement_t apWmmParamSet;
 
@@ -250,12 +249,10 @@ typedef struct {
 	UINT8 ScanChanCount;
 	UINT8 AclStaCnt;
 
-	UINT8 Padding3[1];	// ****** Use this for adding new members
-				// *******
+	UINT8 Padding3[1];	//****** Use this for adding new members *******
 	apRsnConfig_t RsnConfig;
 	BOOLEAN apWmmPsEn;
-	channelInfo_t ScanChanList[IEEEtypes_MAX_CHANNELS];	/* Channels to
-								   scan */
+	channelInfo_t ScanChanList[IEEEtypes_MAX_CHANNELS];	/* Channels to scan */
 	CommonMlmeData_t comData;
 	IEEEtypes_OBSS_ScanParam_t ObssScanParam;
 
@@ -263,13 +260,11 @@ typedef struct {
 	UINT32 mgmtFrameSubtypeFwdEn;
 	UINT8 Ht2040CoexEn;	// Enable/Disable 2040 Coex feature in uAP
 
-	UINT8 Padding4[1];	// ****** Use this for adding new members
-				// *******
+	UINT8 Padding4[1];	//****** Use this for adding new members *******
 
 	wapi_ie_cfg_t wapiCfg;
 	IEEEtypes_ExtCapability_t ExtCap;
-	UINT8 Padding6[1];	// ****** Use this for adding new members
-				// *******
+	UINT8 Padding6[1];	//****** Use this for adding new members *******
 } BssConfig_t;
 
 typedef struct {
@@ -324,7 +319,7 @@ typedef struct {
 	t_void *micTimer;
 	t_void *deauthDelayTimer;	/* hacked in to delay the deauth */
 
-	// phostsa_private psapriv;
+	//phostsa_private psapriv;
 
 	KeyData_t IGtk;
 

@@ -2,7 +2,7 @@
  *
  *  @brief  Common macros are defined here. Must include "wltypes.h" before this file
  *
- * Copyright (C) 2014-2016, Marvell International Ltd.
+ * Copyright (C) 2014-2017, Marvell International Ltd.
  *
  * This software file (the "File") is distributed by Marvell International
  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
@@ -36,16 +36,16 @@ Change log:
 #define WL_READ_REGS16(reg,val)     ((val) = WL_REGS16(reg))
 #define WL_READ_REGS32(reg,val)     ((val) = WL_REGS32(reg))
 #define WL_READ_BYTE(reg,val)       ((val) = WL_REGS8(reg))
-#define WL_READ_HWORD(reg,val)      ((val) = WL_REGS16(reg))	/* half word; */
+#define WL_READ_HWORD(reg,val)      ((val) = WL_REGS16(reg))	/*half word; */
 /*16bits */
-#define WL_READ_WORD(reg,val)       ((val) = WL_REGS32(reg))	/* 32 bits */
+#define WL_READ_WORD(reg,val)       ((val) = WL_REGS32(reg))	/*32 bits */
 #define WL_WRITE_REGS8(reg,val)     (WL_REGS8(reg) = (val))
 #define WL_WRITE_REGS16(reg,val)    (WL_REGS16(reg) = (val))
 #define WL_WRITE_REGS32(reg,val)    (WL_REGS32(reg) = (val))
 #define WL_WRITE_BYTE(reg,val)      (WL_REGS8(reg) = (val))
-#define WL_WRITE_HWORD(reg,val)     (WL_REGS16(reg) = (val))	/* half word; */
+#define WL_WRITE_HWORD(reg,val)     (WL_REGS16(reg) = (val))	/*half word; */
 /*16bits */
-#define WL_WRITE_WORD(reg,val)      (WL_REGS32(reg) = (val))	/* 32 bits */
+#define WL_WRITE_WORD(reg,val)      (WL_REGS32(reg) = (val))	/*32 bits */
 #define WL_REGS8_SETBITS(reg, val)  (WL_REGS8(reg) |= (UINT8)(val))
 #define WL_REGS16_SETBITS(reg, val) (WL_REGS16(reg) |= (UINT16)(val))
 #define WL_REGS32_SETBITS(reg, val) (WL_REGS32(reg) |= (val))
@@ -80,14 +80,12 @@ Change log:
 #define LONG_SWAP(X) ((l64)(X))
 #else /* Little Endian */
 
-#define SHORT_SWAP(X) ((X <<8 ) | (X >> 8))	// !< swap bytes in a 16 bit
-						// short
+#define SHORT_SWAP(X) ((X <<8 ) | (X >> 8))	//!< swap bytes in a 16 bit short
 
 #define WORD_SWAP(X) (((X)&0xff)<<24)+      \
                     (((X)&0xff00)<<8)+      \
                     (((X)&0xff0000)>>8)+    \
-                    (((X)&0xff000000)>>24)	// !< swap bytes in a 32 bit
-						// word
+                    (((X)&0xff000000)>>24)	//!< swap bytes in a 32 bit word
 
 #define LONG_SWAP(X) ( (l64) (((X)&0xffULL)<<56)+               \
                             (((X)&0xff00ULL)<<40)+              \
@@ -96,9 +94,7 @@ Change log:
                             (((X)&0xff00000000ULL)>>8)+         \
                             (((X)&0xff0000000000ULL)>>24)+      \
                             (((X)&0xff000000000000ULL)>>40)+    \
-                            (((X)&0xff00000000000000ULL)>>56))	// !< swap
-								// bytes in a
-								// 64 bit long
+                            (((X)&0xff00000000000000ULL)>>56))	//!< swap bytes in a 64 bit long
 #endif
 
 /*!

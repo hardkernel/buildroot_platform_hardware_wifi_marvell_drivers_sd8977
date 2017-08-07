@@ -2,7 +2,7 @@
  *
  *  @brief This file contains the key management type for ap
  *
- * Copyright (C) 2014-2016, Marvell International Ltd.
+ * Copyright (C) 2014-2017, Marvell International Ltd.
  *
  * This software file (the "File") is distributed by Marvell International
  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
@@ -65,4 +65,4 @@ typedef struct {
 
 #define ETH_P_EAPOL 0x8E88
 
-#endif // _KEYMGMTAPTYPES_H_
+#endif //_KEYMGMTAPTYPES_H_

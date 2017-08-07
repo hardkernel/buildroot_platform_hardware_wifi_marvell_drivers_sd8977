@@ -2,7 +2,7 @@
  *
  *  @brief This file contains functions for 11n Aggregation.
  *
- *  Copyright (C) 2008-2016, Marvell International Ltd.
+ *  Copyright (C) 2008-2017, Marvell International Ltd.
  *
  *  This software file (the "File") is distributed by Marvell International
  *  Ltd. under the terms of the GNU General Public License Version 2, June 1991
@@ -427,6 +427,8 @@ wlan_11n_aggregate_pkt(mlan_private *priv, raListTbl *pra_list,
 		pmbuf_aggr->in_ts_usec = pmbuf_src->in_ts_usec;
 		if (pmbuf_src->flags & MLAN_BUF_FLAG_TDLS)
 			pmbuf_aggr->flags |= MLAN_BUF_FLAG_TDLS;
+		if (pmbuf_src->flags & MLAN_BUF_FLAG_TCP_ACK)
+			pmbuf_aggr->flags |= MLAN_BUF_FLAG_TCP_ACK;
 
 		/* Form AMSDU */
 		wlan_11n_form_amsdu_txpd(priv, pmbuf_aggr);
@@ -459,11 +461,6 @@ wlan_11n_aggregate_pkt(mlan_private *priv, raListTbl *pra_list,
 		pmadapter->callbacks.moal_spin_unlock(pmadapter->pmoal_handle,
 						      priv->wmm.
 						      ra_list_spinlock);
-
-		if (pmbuf_src->flags & MLAN_BUF_FLAG_TCP_ACK)
-			pmadapter->callbacks.moal_tcp_ack_tx_ind(pmadapter->
-								 pmoal_handle,
-								 pmbuf_src);
 
 		pkt_size += wlan_11n_form_amsdu_pkt(pmadapter,
 						    (data + pkt_size),

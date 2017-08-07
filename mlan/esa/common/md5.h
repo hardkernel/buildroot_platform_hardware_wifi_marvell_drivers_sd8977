@@ -2,7 +2,7 @@
  *
  *  @brief This file contains define for md5.
  *
- * Copyright (C) 2014-2016, Marvell International Ltd.
+ * Copyright (C) 2014-2017, Marvell International Ltd.
  *
  * This software file (the "File") is distributed by Marvell International
  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
@@ -28,9 +28,10 @@ Change log:
 typedef struct {
 	unsigned int state[4];	/* state (ABCD) */
 	unsigned int count[2];	/* number of bits, modulo 2^64 (lsb first) */
-	unsigned int scratch[16];	/* This is used to reduce the memory *
-					   requirements of the transform *
-					   function */
+	unsigned int scratch[16];	/* This is used to reduce the memory
+					 ** requirements of the transform
+					 ** function
+					 */
 	unsigned char buffer[64];	/* input buffer */
 } Mrvl_MD5_CTX;
 

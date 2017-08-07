@@ -2,7 +2,7 @@
  *
  *  @brief RX and TX packet descriptor
  *
- * Copyright (C) 2014-2016, Marvell International Ltd.
+ * Copyright (C) 2014-2017, Marvell International Ltd.
  *
  * This software file (the "File") is distributed by Marvell International
  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
@@ -47,12 +47,12 @@ typedef MLAN_PACK_START struct {
 *** @brief Receive Packet Descriptor
 **/
 typedef MLAN_PACK_START struct RxPD_t {
-	/* TODO: Port EMBEDDED_TCPIP and VISTA_802_11_DRIVER_INTERFACE members
-	   to W8786 */
+	/* TODO: Port EMBEDDED_TCPIP and VISTA_802_11_DRIVER_INTERFACE
+	   members to W8786 */
 	UINT8 RxBSSType;
 	UINT8 RxBSSNum;
-	UINT16 RxPacketLength;	// !< Rx Packet Length
-	SINT16 RxPacketOffset;	// !< Offset to the Rx Data
+	UINT16 RxPacketLength;	//!< Rx Packet Length
+	SINT16 RxPacketOffset;	//!< Offset to the Rx Data
 	UINT16 RxPacketType;
 	UINT16 SeqNum;
 	UINT8 userPriority;
@@ -60,8 +60,8 @@ typedef MLAN_PACK_START struct RxPD_t {
 	SINT8 SNR;
 	SINT8 RxSQ2;		// defined to RxNF
 	UINT8 RxHTInfo;		// [Bit o] RxRate format : Legacy = 0 , HT =1
-	// [Bit 1] HT Bandwidth :BW20 =0 , BW40 = 1
-	// [Bit 2] HT Guard Interval : LGI = 0, SGI = 1
+	//[Bit 1] HT Bandwidth :BW20 =0 , BW40 = 1
+	//[Bit 2] HT Guard Interval : LGI = 0, SGI = 1
 #if defined(VISTA_802_11_DRIVER_INTERFACE) || defined(SNIFFER_MODE_ENABLE)
 	UINT8 PacketType;
 	UINT8 NumFragments;
@@ -121,24 +121,24 @@ typedef MLAN_PACK_START struct {
 *** @brief Transmit Packet Descriptor
 **/
 typedef MLAN_PACK_START struct {
-	/* TODO: Port EMBEDDED_TCPIP and VISTA_802_11_DRIVER_INTERFACE members
-	   to W8786 */
+	/* TODO: Port EMBEDDED_TCPIP and VISTA_802_11_DRIVER_INTERFACE
+	   members to W8786 */
 	UINT8 TxBSSType;
 	UINT8 TxBSSNum;
-	UINT16 TxPacketLength;	// !< Tx Packet Length
-	UINT16 TxPacketOffset;	// !< Offset to Tx Data
-	UINT16 TxPacketType;	// !< Tx Packet Type
-	UINT32 TxControl;	// b3-0: RateID; b4:HostRateCtrl;
-	// b11-8: RetryLimit; b12:HostRetryCtrl;
-	// b14-13: Ack Policy, 10 ACK_IMMD
-	// 11 NO_ACK 0x ACK_PER_FRM
+	UINT16 TxPacketLength;	//!< Tx Packet Length
+	UINT16 TxPacketOffset;	//!< Offset to Tx Data
+	UINT16 TxPacketType;	//!< Tx Packet Type
+	UINT32 TxControl;	//b3-0: RateID; b4:HostRateCtrl;
+	//b11-8: RetryLimit; b12:HostRetryCtrl;
+	//b14-13: Ack Policy, 10 ACK_IMMD
+	//        11 NO_ACK 0x ACK_PER_FRM
 	UINT8 userPriority;
-	wcb_flags_t flags;	// These BitFields are for Null Frame Handling
-				// and
+	wcb_flags_t flags;	// These BitFields are for Null Frame Handling and
 	// other Power Save requirements.
-	UINT8 PktDelay_2ms;	/* Driver queue delay used in stats and MSDU **
-				   lifetime expiry calcs; value is represented
-				   ** by 2ms units (ms bit shifted by 1) */
+	UINT8 PktDelay_2ms;	/* Driver queue delay used in stats and MSDU
+				 **  lifetime expiry calcs; value is represented
+				 **  by 2ms units (ms bit shifted by 1)
+				 */
 #ifdef VISTA_802_11_DRIVER_INTERFACE
 	/* Include Packet type for NWF */
 	UINT8 PacketType;
@@ -151,11 +151,9 @@ typedef MLAN_PACK_START struct {
 } MLAN_PACK_END wcb_t;
 
 // Encryption Option is an 8 bit field
-#define ENCR_OPT_NORMAL          0x00	// Normal packet. Follows Enc rules in
-					// FW
+#define ENCR_OPT_NORMAL          0x00	// Normal packet. Follows Enc rules in FW
 #define ENCR_OPT_FORCE_PTEXT     0x01	// Force plain text. No encryption.
-#define ENCR_OPT_FW_KEY_MAP      0x02	// Encrypt using key mapping table in
-					// FW
+#define ENCR_OPT_FW_KEY_MAP      0x02	// Encrypt using key mapping table in FW
 #define ENCR_OPT_PTEXT_80211_PKT 0x03	// No encryption for 802.11 pkt
 
 /*@}*/

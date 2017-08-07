@@ -2,7 +2,7 @@
  *
  *  @brief This file contains define for rc4 decrypt/encrypt
  *
- * Copyright (C) 2014-2016, Marvell International Ltd.
+ * Copyright (C) 2014-2017, Marvell International Ltd.
  *
  * This software file (the "File") is distributed by Marvell International
  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
@@ -50,7 +50,7 @@ extern void MRVL_WapiDecrypt(MRVL_ENDECRYPT_t *crypt, int *pErr);
 #define MRVL_AES_CCM_DECRYPT      MRVL_AesCCMDecrypt
 #endif
 
-#endif /* (HW_IP_AEU_VERSION < 100000) */
+#endif /*(HW_IP_AEU_VERSION < 100000) */
 #endif
 #define MRVL_AES_PRIMITIVE_ENCRYPT MRVL_AesPrimitiveEncrypt
 #define MRVL_AES_PRIMITIVE_DECRYPT MRVL_AesPrimitiveDecrypt

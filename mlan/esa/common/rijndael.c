@@ -2,7 +2,7 @@
  *
  *  @brief This file  Optimised ANSI C code for the Rijndael cipher (now AES)
  *
- * Copyright (C) 2014-2016, Marvell International Ltd.
+ * Copyright (C) 2014-2017, Marvell International Ltd.
  *
  * This software file (the "File") is distributed by Marvell International
  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
@@ -720,8 +720,7 @@ static const u8 Td4[256] = {
 static const u32 rcon[] = {
 	0x01000000, 0x02000000, 0x04000000, 0x08000000,
 	0x10000000, 0x20000000, 0x40000000, 0x80000000,
-	0x1B000000, 0x36000000,	/* for 128-bit blocks, Rijndael never uses more
-				   than 10 rcon values */
+	0x1B000000, 0x36000000,	/* for 128-bit blocks, Rijndael never uses more than 10 rcon values */
 };
 
 #define GETU32(pt) (((u32)(pt)[0] << 24) ^ ((u32)(pt)[1] << 16) ^ ((u32)(pt)[2] <<  8) ^ ((u32)(pt)[3]))
@@ -733,7 +732,7 @@ static const u32 rcon[] = {
  * @return  the number of rounds for the given cipher key size.
  */
 static int
-rijndaelKeySetupEnc(UINT rk[ /* 4*(Nr + 1) */ ], const UINT8 cipherKey[],
+rijndaelKeySetupEnc(UINT rk[ /*4*(Nr + 1) */ ], const UINT8 cipherKey[],
 		    int keyBits)
 {
 	int i = 0;
@@ -822,7 +821,7 @@ rijndaelKeySetupEnc(UINT rk[ /* 4*(Nr + 1) */ ], const UINT8 cipherKey[],
  * @return  the number of rounds for the given cipher key size.
  */
 static int
-rijndaelKeySetupDec(u32 rk[ /* 4*(Nr + 1) */ ], const u8 cipherKey[],
+rijndaelKeySetupDec(u32 rk[ /*4*(Nr + 1) */ ], const u8 cipherKey[],
 		    int keyBits,
 		    int have_encrypt)
 {
@@ -850,8 +849,7 @@ rijndaelKeySetupDec(u32 rk[ /* 4*(Nr + 1) */ ], const u8 cipherKey[],
 		rk[i + 3] = rk[j + 3];
 		rk[j + 3] = temp;
 	}
-	/* apply the inverse MixColumn transform to all round keys but the
-	   first and the last: */
+	/* apply the inverse MixColumn transform to all round keys but the first and the last: */
 	for (i = 1; i < Nr; i++) {
 		rk += 4;
 		rk[0] = Td0[Te4[(rk[0] >> 24)]] ^
@@ -876,7 +874,7 @@ rijndaelKeySetupDec(u32 rk[ /* 4*(Nr + 1) */ ], const u8 cipherKey[],
 
 //#ifdef AES_WRAP_FUNCTION
 static void
-rijndaelEncrypt(const u32 rk[ /* 4*(Nr + 1) */ ], int Nr, const u8 pt[16],
+rijndaelEncrypt(const u32 rk[ /*4*(Nr + 1) */ ], int Nr, const u8 pt[16],
 		u8 ct[16])
 {
 	u32 s0, s1, s2, s3, t0, t1, t2, t3;
@@ -1102,7 +1100,7 @@ rijndaelEncrypt(const u32 rk[ /* 4*(Nr + 1) */ ], int Nr, const u8 pt[16],
 //#endif
 
 static void
-rijndaelDecrypt(const u32 rk[ /* 4*(Nr + 1) */ ], int Nr, const UINT8 ct[16],
+rijndaelDecrypt(const u32 rk[ /*4*(Nr + 1) */ ], int Nr, const UINT8 ct[16],
 		UINT8 pt[16])
 {
 	u32 s0, s1, s2, s3, t0, t1, t2, t3;

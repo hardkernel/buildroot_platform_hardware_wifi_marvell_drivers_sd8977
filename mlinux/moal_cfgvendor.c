@@ -2,7 +2,7 @@
   *
   * @brief This file contains the functions for CFG80211 vendor.
   *
-  * Copyright (C) 2011-2016, Marvell International Ltd.
+  * Copyright (C) 2011-2017, Marvell International Ltd.
   *
   * This software file (the "File") is distributed by Marvell International
   * Ltd. under the terms of the GNU General Public License Version 2, June 1991
@@ -29,7 +29,9 @@
 /********************************************************
 				Global Variables
 ********************************************************/
+#if CFG80211_VERSION_CODE >= KERNEL_VERSION(3, 14, 0)
 extern int dfs_offload;
+#endif
 /********************************************************
 				Local Functions
 ********************************************************/
@@ -38,22 +40,19 @@ extern int dfs_offload;
 				Global Functions
 ********************************************************/
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 14, 0)
+#if CFG80211_VERSION_CODE >= KERNEL_VERSION(3, 14, 0)
 /**marvell vendor command and event*/
 #define MRVL_VENDOR_ID  0x005043
 /** vendor events */
 const struct nl80211_vendor_cmd_info vendor_events[] = {
-	{.vendor_id = MRVL_VENDOR_ID,.subcmd = event_hang,},	/* event_id 0 */
-	{.vendor_id = MRVL_VENDOR_ID,.subcmd = event_dfs_radar_detected,},	/* event_id
-										   0x10004 */
-	{.vendor_id = MRVL_VENDOR_ID,.subcmd = event_dfs_cac_started,},	/* event_id
-									   0x10005 */
-	{.vendor_id = MRVL_VENDOR_ID,.subcmd = event_dfs_cac_finished,},	/* event_id
-										   0x10006 */
-	{.vendor_id = MRVL_VENDOR_ID,.subcmd = event_dfs_cac_aborted,},	/* event_id
-									   0x10007 */
-	{.vendor_id = MRVL_VENDOR_ID,.subcmd = event_dfs_nop_finished,},	/* event_id
-										   0x10008 */
+	{.vendor_id = MRVL_VENDOR_ID,.subcmd = event_hang,},	/*event_id 0 */
+	{.vendor_id = MRVL_VENDOR_ID,.subcmd = event_set_key_mgmt_offload,},	/*event_id 0x10001 */
+	{.vendor_id = MRVL_VENDOR_ID,.subcmd = fw_roam_success,},	/*event_id 0x10002 */
+	{.vendor_id = MRVL_VENDOR_ID,.subcmd = event_dfs_radar_detected,},	/*event_id 0x10004 */
+	{.vendor_id = MRVL_VENDOR_ID,.subcmd = event_dfs_cac_started,},	/*event_id 0x10005 */
+	{.vendor_id = MRVL_VENDOR_ID,.subcmd = event_dfs_cac_finished,},	/*event_id 0x10006 */
+	{.vendor_id = MRVL_VENDOR_ID,.subcmd = event_dfs_cac_aborted,},	/*event_id 0x10007 */
+	{.vendor_id = MRVL_VENDOR_ID,.subcmd = event_dfs_nop_finished,},	/*event_id 0x10008 */
 	/**add vendor event here*/
 };
 
@@ -114,7 +113,7 @@ woal_cfg80211_vendor_event(IN moal_private *priv,
 	}
 
 	/**allocate skb*/
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 1, 0)
+#if CFG80211_VERSION_CODE >= KERNEL_VERSION(4, 1, 0)
 	skb = cfg80211_vendor_event_alloc(wiphy, NULL, len, event_id,
 					  GFP_ATOMIC);
 #else
@@ -136,7 +135,7 @@ woal_cfg80211_vendor_event(IN moal_private *priv,
 	return ret;
 }
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 14, 0)
+#if CFG80211_VERSION_CODE >= KERNEL_VERSION(3, 14, 0)
 /**
  * @brief send dfs vendor event to kernel
  *
@@ -245,6 +244,234 @@ woal_cfg80211_subcmd_set_drvdbg(struct wiphy *wiphy,
 }
 
 /**
+ * @brief vendor command to get correlated HW and System time
+ *
+ * @param wiphy    A pointer to wiphy struct
+ * @param wdev     A pointer to wireless_dev struct
+ * @param data     a pointer to data
+ * @param  len     data length
+ *
+ * @return      0: success  -1: fail
+ */
+static int
+woal_cfg80211_subcmd_get_correlated_time(struct wiphy *wiphy,
+					 struct wireless_dev *wdev,
+					 const void *data, int len)
+{
+	struct net_device *dev = wdev->netdev;
+	moal_private *priv = (moal_private *)woal_get_netdev_priv(dev);
+	struct sk_buff *skb = NULL;
+	mlan_ioctl_req *req = NULL;
+	mlan_ds_get_correlated_time *info = NULL;
+	mlan_status status = MLAN_STATUS_SUCCESS;
+	int err = -1;
+	int length = 0;
+
+	/* Allocate an IOCTL request buffer */
+	req = woal_alloc_mlan_ioctl_req(sizeof(t_u32) +
+					sizeof(mlan_ds_get_correlated_time));
+	if (req == NULL) {
+		PRINTM(MERROR, "Could not allocate mlan ioctl request!\n");
+		return -ENOMEM;
+	}
+
+	/* Fill request buffer */
+	info = (mlan_ds_get_correlated_time *) req->pbuf;
+	req->req_id = MLAN_IOCTL_GET_CORRELATED_TIME;
+	req->action = MLAN_ACT_GET;
+
+	/* Send IOCTL request to MLAN */
+	status = woal_request_ioctl(priv, req, MOAL_IOCTL_WAIT);
+	if (status != MLAN_STATUS_SUCCESS) {
+		PRINTM(MERROR, "get correleted time fail\n");
+		goto done;
+	}
+
+	length = sizeof(mlan_ds_get_correlated_time);
+
+	DBG_HEXDUMP(MCMD_D, "get_correlated_time", (t_u8 *)info, length);
+
+	/* Alloc the SKB for vendor_event */
+	skb = cfg80211_vendor_cmd_alloc_reply_skb(wiphy, length);
+	if (unlikely(!skb)) {
+		PRINTM(MERROR, "skb alloc failed\n");
+		goto done;
+	}
+
+	/* Push the data to the skb */
+	nla_put_nohdr(skb, length, info);
+
+	err = cfg80211_vendor_cmd_reply(skb);
+	if (unlikely(err)) {
+		PRINTM(MERROR, "Vendor Command reply failed ret:%d \n", err);
+	}
+
+done:
+	if (status != MLAN_STATUS_PENDING)
+		kfree(req);
+	return err;
+}
+
+/**
+ * @brief vendor command to key_mgmt_set_key
+ *
+ * @param wiphy    A pointer to wiphy struct
+ * @param wdev     A pointer to wireless_dev struct
+ * @param data     a pointer to data
+ * @param  len     data length
+ *
+ * @return      0: success  fail otherwise
+ */
+static int
+woal_cfg80211_subcmd_set_roaming_offload_key(struct wiphy *wiphy,
+					     struct wireless_dev *wdev,
+					     const void *data, int data_len)
+{
+	moal_private *priv;
+	struct net_device *dev;
+	struct sk_buff *skb = NULL;
+	t_u8 *pos = (t_u8 *)data;
+	int ret = MLAN_STATUS_SUCCESS;
+
+	ENTER();
+
+	if (data)
+		DBG_HEXDUMP(MCMD_D, "Vendor pmk", (t_u8 *)data, data_len);
+
+	if (!wdev || !wdev->netdev) {
+		LEAVE();
+		return -EFAULT;
+	}
+
+	dev = wdev->netdev;
+	priv = (moal_private *)woal_get_netdev_priv(dev);
+	if (!priv) {
+		LEAVE();
+		return -EFAULT;
+	}
+
+	if (data_len > MLAN_MAX_KEY_LENGTH) {
+		memcpy(&priv->pmk.pmk_r0, pos, MLAN_MAX_KEY_LENGTH);
+		pos += MLAN_MAX_KEY_LENGTH;
+		memcpy(&priv->pmk.pmk_r0_name, pos,
+		       MIN(MLAN_MAX_PMKR0_NAME_LENGTH,
+			   data_len - MLAN_MAX_KEY_LENGTH));
+	} else {
+		memcpy(&priv->pmk.pmk, data,
+		       MIN(MLAN_MAX_KEY_LENGTH, data_len));
+	}
+	priv->pmk_saved = MTRUE;
+
+    /** Allocate skb for cmd reply*/
+	skb = cfg80211_vendor_cmd_alloc_reply_skb(wiphy, data_len);
+	if (!skb) {
+		PRINTM(MERROR, "allocate memory fail for vendor cmd\n");
+		LEAVE();
+		return -EFAULT;
+	}
+	pos = skb_put(skb, data_len);
+	memcpy(pos, data, data_len);
+	ret = cfg80211_vendor_cmd_reply(skb);
+
+	LEAVE();
+	return ret;
+}
+
+/**
+ * @brief vendor command to supplicant to update AP info
+ *
+ * @param priv     A pointer to moal_private
+ * @param data     a pointer to data
+ * @param  len     data length
+ *
+ * @return      0: success  1: fail
+ */
+int
+woal_roam_ap_info(IN moal_private *priv, IN t_u8 *data, IN int len)
+{
+	struct wiphy *wiphy = priv->wdev->wiphy;
+	struct sk_buff *skb = NULL;
+	int ret = MLAN_STATUS_SUCCESS;
+	key_info *pkey = NULL;
+	apinfo *pinfo = NULL;
+	MrvlIEtypesHeader_t *tlv = NULL;
+	t_u16 tlv_type = 0, tlv_len = 0, tlv_buf_left = 0;
+	int event_id = 0;
+	t_u8 authorized = 1;
+
+	ENTER();
+
+	event_id = woal_get_event_id(fw_roam_success);
+	if (event_max == event_id) {
+		PRINTM(MERROR, "Not find this event %d \n", event_id);
+		ret = 1;
+		LEAVE();
+		return ret;
+	}
+	/**allocate skb*/
+#if CFG80211_VERSION_CODE >= KERNEL_VERSION(4, 1, 0)
+	skb = cfg80211_vendor_event_alloc(wiphy, NULL, len + 50,
+#else
+	skb = cfg80211_vendor_event_alloc(wiphy, len + 50,
+#endif
+					  event_id, GFP_ATOMIC);
+
+	if (!skb) {
+		PRINTM(MERROR, "allocate memory fail for vendor event\n");
+		ret = 1;
+		LEAVE();
+		return ret;
+	}
+
+	nla_put(skb, MRVL_WLAN_VENDOR_ATTR_ROAM_AUTH_BSSID,
+		MLAN_MAC_ADDR_LENGTH, (t_u8 *)data);
+	nla_put(skb, MRVL_WLAN_VENDOR_ATTR_ROAM_AUTH_AUTHORIZED,
+		sizeof(authorized), &authorized);
+	tlv = (MrvlIEtypesHeader_t *)(data + MLAN_MAC_ADDR_LENGTH);
+	tlv_buf_left = len - MLAN_MAC_ADDR_LENGTH;
+	while (tlv_buf_left >= sizeof(MrvlIEtypesHeader_t)) {
+		tlv_type = woal_le16_to_cpu(tlv->type);
+		tlv_len = woal_le16_to_cpu(tlv->len);
+
+		if (tlv_buf_left < (tlv_len + sizeof(MrvlIEtypesHeader_t))) {
+			PRINTM(MERROR,
+			       "Error processing firmware roam success TLVs, bytes left < TLV length\n");
+			break;
+		}
+
+		switch (tlv_type) {
+		case TLV_TYPE_APINFO:
+			pinfo = (apinfo *) tlv;
+			nla_put(skb, MRVL_WLAN_VENDOR_ATTR_ROAM_AUTH_RESP_IE,
+				pinfo->header.len, pinfo->rsp_ie);
+			break;
+
+		case TLV_TYPE_KEYINFO:
+			pkey = (key_info *) tlv;
+			nla_put(skb,
+				MRVL_WLAN_VENDOR_ATTR_ROAM_AUTH_KEY_REPLAY_CTR,
+				MLAN_REPLAY_CTR_LEN, pkey->key.replay_ctr);
+			nla_put(skb, MRVL_WLAN_VENDOR_ATTR_ROAM_AUTH_PTK_KCK,
+				MLAN_KCK_LEN, pkey->key.kck);
+			nla_put(skb, MRVL_WLAN_VENDOR_ATTR_ROAM_AUTH_PTK_KEK,
+				MLAN_KEK_LEN, pkey->key.kek);
+			break;
+		default:
+			break;
+		}
+		tlv_buf_left -= tlv_len + sizeof(MrvlIEtypesHeader_t);
+		tlv = (MrvlIEtypesHeader_t *)((t_u8 *)tlv + tlv_len +
+					      sizeof(MrvlIEtypesHeader_t));
+	}
+
+	/**send event*/
+	cfg80211_vendor_event(skb, GFP_ATOMIC);
+
+	LEAVE();
+	return ret;
+}
+
+/**
  * @brief vendor command to set enable/disable dfs offload
  *
  * @param wiphy       A pointer to wiphy struct
@@ -285,6 +512,12 @@ const struct wiphy_vendor_command vendor_commands[] = {
 	 .flags = WIPHY_VENDOR_CMD_NEED_WDEV | WIPHY_VENDOR_CMD_NEED_NETDEV,
 	 .doit = woal_cfg80211_subcmd_set_drvdbg,
 	 },
+	{
+	 .info = {.vendor_id = MRVL_VENDOR_ID,.subcmd =
+		  sub_cmd_set_roaming_offload_key,},
+	 .flags = WIPHY_VENDOR_CMD_NEED_WDEV | WIPHY_VENDOR_CMD_NEED_NETDEV,
+	 .doit = woal_cfg80211_subcmd_set_roaming_offload_key,
+	 },
 
 	{
 	 .info = {.vendor_id = MRVL_VENDOR_ID,.subcmd =
@@ -293,6 +526,12 @@ const struct wiphy_vendor_command vendor_commands[] = {
 	 .doit = woal_cfg80211_subcmd_set_dfs_offload,
 	 },
 
+	{
+	 .info = {.vendor_id = MRVL_VENDOR_ID,.subcmd =
+		  sub_cmd_get_correlated_time,},
+	 .flags = WIPHY_VENDOR_CMD_NEED_WDEV | WIPHY_VENDOR_CMD_NEED_NETDEV,
+	 .doit = woal_cfg80211_subcmd_get_correlated_time,
+	 },
 };
 
 /**

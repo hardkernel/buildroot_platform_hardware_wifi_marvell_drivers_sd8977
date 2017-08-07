@@ -3,7 +3,7 @@
  *  @brief This file contains definitions relating to messages specified in the
  *    IEEE 802.11 spec.
  *
- * Copyright (C) 2014-2016, Marvell International Ltd.
+ * Copyright (C) 2014-2017, Marvell International Ltd.
  *
  * This software file (the "File") is distributed by Marvell International
  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
@@ -267,7 +267,7 @@ Change log:
  * against negative integers quite easily, and fail in subtle ways.
  */
 typedef MLAN_PACK_START struct {
-#if 1				// BYTE_ORDER == LITTLE_ENDIAN
+#if 1				//BYTE_ORDER == LITTLE_ENDIAN
 	UINT8 ip_hl:4;		/* header length */
 	UINT8 ip_v:4;		/* version */
 #endif
@@ -765,10 +765,11 @@ typedef enum {
 } IEEEtypes_AssocResult_e;
 
 typedef enum {
-	/* Failure enumerations must be non-zero since they map to the * IEEE
-	   status field in the assoc response.  The SUCCESS code is left * in
-	   here as a place holder but is never used.  The remaining enums *
-	   cannot be assigned a value of 0. */
+	/* Failure enumerations must be non-zero since they map to the
+	 **  IEEE status field in the assoc response.  The SUCCESS code is left
+	 **  in here as a place holder but is never used.  The remaining enums
+	 **  cannot be assigned a value of 0.
+	 */
 	ASSOC_CMD_SUCCESS = 0,
 
 	ASSOC_CMD_FAILURE_ASSOC,
@@ -1019,9 +1020,9 @@ typedef MLAN_PACK_START struct {
 } MLAN_PACK_END IEEEtypes_StaInfo_t;
 
 typedef MLAN_PACK_START struct {
-	UINT8 Rsvd:2;		// [0:1] Reserved
-	UINT8 SoundingSeq:6;	// [2:7]Seq no.
-	IEEEtypes_StaInfo_t StaInfo;	// Currently only 1 sta_info support
+	UINT8 Rsvd:2;		//[0:1] Reserved
+	UINT8 SoundingSeq:6;	//[2:7]Seq no.
+	IEEEtypes_StaInfo_t StaInfo;	//Currently only 1 sta_info support
 
 } MLAN_PACK_END IEEEtypes_NDPAFrameBody_t;
 
@@ -1278,9 +1279,9 @@ typedef MLAN_PACK_START struct {
 	UINT8 PSMP_Capable:1;	/* bit 4 */
 	UINT8 Reserved5:1;	/* bit 5 */
 	UINT8 SPSMP_Support:1;	/* bit 6 */
-	UINT8 Event:1;		/* bit 7 */
-	UINT8 Diagnostics:1;	/* bit 8 */
-	UINT8 MulticastDiagnostics:1;	/* bit 9 */
+	UINT8 Event:1;		/* bit 7  */
+	UINT8 Diagnostics:1;	/* bit 8  */
+	UINT8 MulticastDiagnostics:1;	/* bit 9  */
 	UINT8 LocationTracking:1;	/* bit 10 */
 	UINT8 FMS:1;		/* bit 11 */
 	UINT8 ProxyARPService:1;	/* bit 12 */
@@ -1540,9 +1541,10 @@ typedef MLAN_PACK_START struct {
 #define DOT11AC_VHTCAP_MAX_MPDU_LEN_0     3895
 #define DOT11AC_VHTCAP_MAX_MPDU_LEN_1     7991
 #define DOT11AC_VHTCAP_MAX_MPDU_LEN_2     11454
-#define DOT11AC_VHTCAP_MAX_MPDU_LEN_3     3895	// reserved value
+#define DOT11AC_VHTCAP_MAX_MPDU_LEN_3     3895	//reserved value
 
-    /* IE definitions based on draft 1.4. */
+    /* IE definitions based on draft 1.4.
+     */
 typedef MLAN_PACK_START struct {
 	UINT32 MaxMpduLen:2;
 	UINT32 SuppChanWidthSet:2;
@@ -2001,14 +2003,18 @@ typedef MLAN_PACK_START struct {
 	IEEEtypes_ElementId_e ElementId;
 	IEEEtypes_Len_t Len;
 
-	/* All elements after Ver field are optional per the spec. ** ** -
-	   AuthKeyList and PwsKeyCipherList can have multiple elements so **
-	   static parsing of this structure is not possible. ** ** - RsnCap,
-	   PMKIDCnt/List, and GrpMgmtCipher are often not included ** ** - If
-	   any optional element is included, all preceding elements must **
-	   also be included.  Once an optional element is not inserted, the **
-	   IE construction ends. (i.e. RsnCap must be included if PMKIDCnt/List
-	   ** is needed). */
+	/* All elements after Ver field are optional per the spec.
+	 **
+	 ** - AuthKeyList and PwsKeyCipherList can have multiple elements so
+	 **   static parsing of this structure is not possible.
+	 **
+	 ** - RsnCap, PMKIDCnt/List, and GrpMgmtCipher are often not included
+	 **
+	 ** - If any optional element is included, all preceding elements must
+	 **   also be included.  Once an optional element is not inserted, the
+	 **   IE construction ends. (i.e. RsnCap must be included if PMKIDCnt/List
+	 **   is needed).
+	 */
 
 	UINT16 Ver;
 	UINT8 GrpKeyCipher[4];
@@ -2355,7 +2361,7 @@ typedef enum {
 	SECONDARY_CHAN_NONE = 0,
 	SECONDARY_CHAN_ABOVE = 1,
 	SECONDARY_CHAN_BELOW = 3,
-	// reserved 2, 4~255
+	//reserved 2, 4~255
 } Chan2Offset_e;
 
 typedef enum {
@@ -2796,29 +2802,28 @@ typedef MLAN_PACK_START enum {
 
 typedef MLAN_PACK_START struct {
 	IEEEtypes_WMM_TSPEC_TS_TRAFFIC_TYPE_e TrafficType:1;
-	UINT8 TID:4;		// ! Unique identifier
+	UINT8 TID:4;		//! Unique identifier
 	IEEEtypes_WMM_TSPEC_TS_Info_Direction_e Direction:2;
 	UINT8 acp_1:1;
 
 	UINT8 acp_2:1;
 	UINT8 Aggregation:1;
-	IEEEtypes_WMM_TSPEC_TS_Info_PSB_e PSB:1;	// ! Legacy/Trigg
-	UINT8 UserPriority:3;	// ! 802.1d User Priority
+	IEEEtypes_WMM_TSPEC_TS_Info_PSB_e PSB:1;	//! Legacy/Trigg
+	UINT8 UserPriority:3;	//! 802.1d User Priority
 	IEEEtypes_WMM_TSPEC_TS_Info_AckPolicy_e AckPolicy:2;
 
 	UINT8 tsinfo_0:8;
 } MLAN_PACK_END IEEEtypes_WMM_TSPEC_TS_Info_t;
 
 typedef MLAN_PACK_START struct {
-	UINT16 Size:15;		// ! Nominal size in octets
-	UINT16 Fixed:1;		// ! 1: Fixed size given in Size, 0: Var, size
-				// is nominal
+	UINT16 Size:15;		//! Nominal size in octets
+	UINT16 Fixed:1;		//! 1: Fixed size given in Size, 0: Var, size is nominal
 
 } MLAN_PACK_END IEEEtypes_WMM_TSPEC_NomMSDUSize_t;
 
 typedef MLAN_PACK_START struct {
-	UINT16 Fractional:13;	// ! Fractional portion
-	UINT16 Whole:3;		// ! Whole portion
+	UINT16 Fractional:13;	//! Fractional portion
+	UINT16 Whole:3;		//! Whole portion
 
 } MLAN_PACK_END IEEEtypes_WMM_TSPEC_SBWA;
 
@@ -2956,7 +2961,7 @@ typedef MLAN_PACK_START struct {
 #define IEEE80211g_PREAM        (TPREAMBLE+TSIGNAL)	/* us */
 #define IEEE80211a_PREAM        (IEEE80211g_PREAM )	/* us */
 #define IEEE80211n_PREAM        (40)	/* us */
-#define IEEE80211ac_PREAM       (40)    /* us */	// TBD
+#define IEEE80211ac_PREAM       (40)    /* us */	//TBD
 
 #define TSYM                    (4)	/* us */
 
@@ -2985,16 +2990,14 @@ typedef enum {
 
 } RegDomain_e;
 
-#define IEEE_PHY_RATE_CODE_1Mbps    (10)	// it's the same as
-						// IEEE_PHY_RATE_CODE_12Mbps
+#define IEEE_PHY_RATE_CODE_1Mbps    (10)	// it's the same as IEEE_PHY_RATE_CODE_12Mbps
 #define IEEE_PHY_RATE_CODE_2Mbps    (20)
 #define IEEE_PHY_RATE_CODE_5_5Mbps  (55)
 #define IEEE_PHY_RATE_CODE_11Mbps   (110)
 #define IEEE_PHY_RATE_CODE_22Mbps   (220)
 #define IEEE_PHY_RATE_CODE_6Mbps    (0x0B)
 #define IEEE_PHY_RATE_CODE_9Mbps    (0x0F)
-#define IEEE_PHY_RATE_CODE_12Mbps   (0x0A)	// it's the same as
-						// IEEE_PHY_RATE_CODE_1Mbps
+#define IEEE_PHY_RATE_CODE_12Mbps   (0x0A)	// it's the same as IEEE_PHY_RATE_CODE_1Mbps
 #define IEEE_PHY_RATE_CODE_18Mbps   (0x0E)
 #define IEEE_PHY_RATE_CODE_24Mbps   (0x09)
 #define IEEE_PHY_RATE_CODE_36Mbps   (0x0D)
@@ -3002,8 +3005,7 @@ typedef enum {
 #define IEEE_PHY_RATE_CODE_54Mbps   (0x0C)
 #define IEEE_PHY_RATE_CODE_72Mbps   (0x07)
 
-#define IEEE_PHY_RATE_CODE_1Mbps    (10)	// it's the same as
-						// IEEE_PHY_RATE_CODE_12Mbps
+#define IEEE_PHY_RATE_CODE_1Mbps    (10)	// it's the same as IEEE_PHY_RATE_CODE_12Mbps
 #define IEEE_PHY_RATE_CODE_2Mbps    (20)
 #define IEEE_PHY_RATE_CODE_5_5Mbps  (55)
 #define IEEE_PHY_RATE_CODE_11Mbps   (110)
@@ -3011,8 +3013,7 @@ typedef enum {
 
 #define IEEE_PHY_RATE_CODE_6Mbps    (0x0B)
 #define IEEE_PHY_RATE_CODE_9Mbps    (0x0F)
-#define IEEE_PHY_RATE_CODE_12Mbps   (0x0A)	// it's the same as
-						// IEEE_PHY_RATE_CODE_1Mbps
+#define IEEE_PHY_RATE_CODE_12Mbps   (0x0A)	// it's the same as IEEE_PHY_RATE_CODE_1Mbps
 #define IEEE_PHY_RATE_CODE_18Mbps   (0x0E)
 #define IEEE_PHY_RATE_CODE_24Mbps   (0x09)
 #define IEEE_PHY_RATE_CODE_36Mbps   (0x0D)

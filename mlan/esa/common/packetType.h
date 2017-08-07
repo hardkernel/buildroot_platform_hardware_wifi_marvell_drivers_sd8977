@@ -3,7 +3,7 @@
  *  @brief This file defines Packet Type enumeration used for PacketType fields in RX and TX
  *          packet descriptors
  *
- * Copyright (C) 2014-2016, Marvell International Ltd.
+ * Copyright (C) 2014-2017, Marvell International Ltd.
  *
  * This software file (the "File") is distributed by Marvell International
  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
@@ -31,24 +31,28 @@ Change log:
 **/
 
 typedef enum {
-	PKT_TYPE_802DOT3_DEFAULT = 0,	/* !< For RX packets it represents **
-					   IEEE 802.3 SNAP frame .  For ** TX
-					   Packets.  This Field is for **
-					   backwards compatibility only and **
-					   should not be used going ** forward. */
-	PKT_TYPE_802DOT3_LLC = 1,	// !< IEEE 802.3 frame with LLC header
-	PKT_TYPE_ETHERNET_V2 = 2,	// !< Ethernet version 2 frame
-	PKT_TYPE_802DOT3_SNAP = 3,	// !< IEEE 802.3 SNAP frame
-	PKT_TYPE_802DOT3 = 4,	// !< IEEE 802.3 frame
-	PKT_TYPE_802DOT11 = 5,	// !< IEEE 802.11 frame
-	PKT_TYPE_ETCP_SOCKET_DATA = 7,	// !< eTCP Socket Data
-	PKT_TYPE_RAW_DATA = 8,	// !< Non socket data when using eTCP
-	PKT_TYPE_MRVL_MESH = 9,	// !< Marvell Mesh frame
+	PKT_TYPE_802DOT3_DEFAULT = 0,	/*!< For RX packets it represents
+					 **   IEEE 802.3 SNAP frame .  For
+					 **   TX Packets.  This Field is for
+					 **   backwards compatibility only and
+					 **   should not be used going
+					 **   forward.
+					 */
+	PKT_TYPE_802DOT3_LLC = 1,	//!< IEEE 802.3 frame with LLC header
+	PKT_TYPE_ETHERNET_V2 = 2,	//!< Ethernet version 2 frame
+	PKT_TYPE_802DOT3_SNAP = 3,	//!< IEEE 802.3 SNAP frame
+	PKT_TYPE_802DOT3 = 4,	//!< IEEE 802.3 frame
+	PKT_TYPE_802DOT11 = 5,	//!< IEEE 802.11 frame
+	PKT_TYPE_ETCP_SOCKET_DATA = 7,	//!< eTCP Socket Data
+	PKT_TYPE_RAW_DATA = 8,	//!< Non socket data when using eTCP
+	PKT_TYPE_MRVL_MESH = 9,	//!< Marvell Mesh frame
 
-	/* Marvell Internal firmware packet types ** Range from 0x0E to 0xEE **
-	   These internal Packet types should grow from ** 0xEE down.  This
-	   will leave room incase the packet ** types between the driver &
-	   firmware need to be expanded */
+	/* Marvell Internal firmware packet types
+	 ** Range from 0x0E to 0xEE
+	 ** These internal Packet types should grow from
+	 ** 0xEE down.  This will leave room incase the packet
+	 ** types between the driver & firmware need to be expanded
+	 */
 	PKT_TYPE_MRVL_EAPOL_MSG = 0xDF,
 	PKT_TYPE_MRVL_BT_AMP = 0xE0,
 	PKT_TYPE_FWD_MGT = 0xE2,

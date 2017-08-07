@@ -2,7 +2,7 @@
  *
  *  @brief This file  defines sha256 crypto
  *
- * Copyright (C) 2014-2016, Marvell International Ltd.
+ * Copyright (C) 2014-2017, Marvell International Ltd.
  *
  * This software file (the "File") is distributed by Marvell International
  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
@@ -39,7 +39,7 @@ mrvl_sha256_crypto_vector(void *priv, size_t num_elem,
 			  UINT8 *addr[], size_t * len, UINT8 *mac)
 {
 
-	// BufferDesc_t* pBufDesc = NULL;
+	//BufferDesc_t* pBufDesc = NULL;
 	UINT8 buf[SHA256_MIN_SCRATCH_BUF] = { 0 };
 
 	sha256_vector((void *)priv, num_elem, addr, len, mac, (UINT8 *)buf);
@@ -63,7 +63,7 @@ mrvl_sha256_crypto_kdf(void *priv, UINT8 *pKey,
 	UINT8 *pLoopResult;
 	UINT8 iterations;
 	UINT16 i;
-	// BufferDesc_t* pBufDesc = NULL;
+	//BufferDesc_t* pBufDesc = NULL;
 	UINT8 buf[HMAC_SHA256_MIN_SCRATCH_BUF] = { 0 };
 
 	pResult = pContext + context_len;
@@ -82,8 +82,7 @@ mrvl_sha256_crypto_kdf(void *priv, UINT8 *pKey,
 	pLoopResult = pResult;
 
 	for (i = 1; i <= iterations; i++) {
-		/* Skip vectors[0]; Used internally in hmac_sha256_vector
-		   function */
+		/* Skip vectors[0]; Used internally in hmac_sha256_vector function */
 		vectors[1] = (UINT8 *)&i;
 		vectLen[1] = sizeof(i);
 
@@ -105,9 +104,10 @@ mrvl_sha256_crypto_kdf(void *priv, UINT8 *pKey,
 				   NELEMENTS(vectors), vectors, vectLen,
 				   pLoopResult, (UINT8 *)buf);
 
-		/* Move the hmac output pointer so another digest can be
-		   appended ** if more loop iterations are needed to get the
-		   output_len key ** bit total */
+		/* Move the hmac output pointer so another digest can be appended
+		 **  if more loop iterations are needed to get the output_len key
+		 **  bit total
+		 */
 		pLoopResult += SHA256_MAC_LEN;
 	}
 

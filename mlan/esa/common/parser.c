@@ -2,7 +2,7 @@
  *
  *  @brief This file defines function for 802.11 Management Frames Parsing
  *
- * Copyright (C) 2014-2016, Marvell International Ltd.
+ * Copyright (C) 2014-2017, Marvell International Ltd.
  *
  * This software file (the "File") is distributed by Marvell International
  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
@@ -131,9 +131,10 @@ GetIEPointers(void *priv, UINT8 *pIe, int bufLen, IEPointers_t *pIePointers)
 			pIePointers->pWapi = (IEEEtypes_WAPIElement_t *)pIe;
 			break;
 
-			/* Add element not handled by ROM_parser_getIEPtr or **
-			   override element processing in ROM_parser_getIEPtr
-			   ** here. */
+			/*  Add element not handled by ROM_parser_getIEPtr or
+			 **  override element processing in ROM_parser_getIEPtr
+			 **  here.
+			 */
 		case ELEM_ID_VENDOR_SPECIFIC:
 		default:
 			if (ROM_parser_getIEPtr(priv, pIe, pIePointers) ==
@@ -145,10 +146,8 @@ GetIEPointers(void *priv, UINT8 *pIe, int bufLen, IEPointers_t *pIePointers)
 							 *)pIe;
 					}
 				}
-				// Add your code to process vendor specific
-				// elements not
-				// processed by above ROM_paser_getAssocIEPtr
-				// function.
+				// Add your code to process vendor specific elements not
+				// processed by above ROM_paser_getAssocIEPtr function.
 			}
 			break;
 		}
@@ -190,11 +189,11 @@ parser_getAssocIEs(void *priv, UINT8 *pIe,
 			break;
 #endif
 
-			/* The following 5 elements, HT CAP, HT INFO, 20/40
-			   Coex, OBSS SCAN PARAM, and EXTENDED CAP, are
-			   ignored here if 11n is not compiled. When 11n is
-			   compiled these 5 elements would be handled in
-			   ROM_parser_getAssocIEPtr routine.
+			/*  The following 5 elements, HT CAP, HT INFO, 20/40 Coex,
+			   OBSS SCAN PARAM, and EXTENDED CAP, are ignored
+			   here if 11n is not compiled. When 11n is compiled these
+			   5 elements would be handled in ROM_parser_getAssocIEPtr
+			   routine.
 
 			 */
 		case ELEM_ID_HT_CAPABILITY:
@@ -203,21 +202,23 @@ parser_getAssocIEs(void *priv, UINT8 *pIe,
 		case ELEM_ID_OBSS_SCAN_PARAM:
 		case ELEM_ID_EXT_CAPABILITIES:
 			/* Do not process these elements in ROM routine
-			   ROM_parser_getAssocIEPtr Note: a break here. */
+			   ROM_parser_getAssocIEPtr
+			   Note: a break here.
+			 */
 			break;
 
-			/* Add element not handled by ROM_parser_getAssocIEPtr
-			   or override element processing in
-			   ROM_parser_getAssocIEPtr here. \ */
+			/*  Add element not handled by ROM_parser_getAssocIEPtr or
+			   override element processing in ROM_parser_getAssocIEPtr
+			   here.
+			   \
+			 */
 
 		case ELEM_ID_VENDOR_SPECIFIC:
 		default:
 			if (ROM_parser_getAssocIEPtr(priv, pIe, pIePointers) ==
 			    FALSE) {
-				// Add your code to process vendor specific
-				// elements not
-				// processed by above ROM_paser_getAssocIEPtr
-				// function.
+				// Add your code to process vendor specific elements not
+				// processed by above ROM_paser_getAssocIEPtr function.
 				if (!pIePointers->pHtCap ||
 				    !pIePointers->pHtInfo) {
 					switch (IsEpigramHTElement

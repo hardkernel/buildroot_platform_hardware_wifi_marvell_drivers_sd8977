@@ -5,7 +5,7 @@
  *  Driver interface functions and type declarations for the 11n module
  *    implemented in mlan_11n.c.
  *
- *  Copyright (C) 2008-2016, Marvell International Ltd.
+ *  Copyright (C) 2008-2017, Marvell International Ltd.
  *
  *  This software file (the "File") is distributed by Marvell International
  *  Ltd. under the terms of the GNU General Public License Version 2, June 1991
@@ -75,7 +75,7 @@ int wlan_cmd_append_11n_tlv(IN mlan_private *pmpriv,
 			    IN BSSDescriptor_t *pbss_desc, OUT t_u8 **ppbuffer);
 /** wlan fill HT cap tlv */
 void wlan_fill_ht_cap_tlv(mlan_private *priv, MrvlIETypes_HTCap_t *pht_cap,
-			  t_u8 band);
+			  t_u8 band, t_u8 fill);
 /** wlan fill HT cap IE */
 void wlan_fill_ht_cap_ie(mlan_private *priv, IEEEtypes_HTCap_t *pht_cap,
 			 t_u8 bands);
@@ -90,7 +90,7 @@ void wlan_11n_delete_txbastream_tbl_entry(mlan_private *priv,
 void wlan_11n_deleteall_txbastream_tbl(mlan_private *priv);
 /** Get Tx BA stream table */
 TxBAStreamTbl *wlan_11n_get_txbastream_tbl(mlan_private *priv, int tid,
-					   t_u8 *ra);
+					   t_u8 *ra, int lock);
 /** Create Tx BA stream table */
 void wlan_11n_create_txbastream_tbl(mlan_private *priv, t_u8 *ra, int tid,
 				    baStatus_e ba_status);
@@ -115,6 +115,7 @@ void wlan_update_ampdu_txwinsize(pmlan_adapter pmadapter);
 mlan_status wlan_ret_amsdu_aggr_ctrl(pmlan_private pmpriv,
 				     HostCmd_DS_COMMAND *resp,
 				     mlan_ioctl_req *pioctl_buf);
+void wlan_set_tx_pause_flag(mlan_private *priv, t_u8 flag);
 /** reconfigure tx buf size */
 mlan_status wlan_cmd_recfg_tx_buf(mlan_private *priv,
 				  HostCmd_DS_COMMAND *cmd,
@@ -130,10 +131,6 @@ t_u8 wlan_validate_chan_offset(IN mlan_private *pmpriv,
 t_u8 wlan_get_second_channel_offset(int chan);
 
 void wlan_update_11n_cap(mlan_private *pmpriv);
-
-/** fill the TDLS HT cap tlv*/
-void wlan_fill_tdls_ht_cap_TLV(mlan_private *priv, MrvlIETypes_HTCap_t *pht_cap,
-			       t_u8 bands);
 
 /** clean up txbastream_tbl */
 void wlan_11n_cleanup_txbastream_tbl(mlan_private *priv, t_u8 *ra);
@@ -233,44 +230,6 @@ reset_station_ampdu(mlan_private *priv, t_u8 tid, t_u8 *ra)
 }
 
 /**
- *  @brief This function checks whether current BA stream is high priority or not
- *
- *  @param priv     A pointer to mlan_private
- *  @param tid	    TID
- *
- *  @return         MTRUE or MFALSE
- */
-static INLINE t_u8
-wlan_is_cur_bastream_high_prio(mlan_private *priv, int tid)
-{
-	TxBAStreamTbl *ptx_tbl;
-
-	ENTER();
-
-	ptx_tbl = (TxBAStreamTbl *)util_peek_list(priv->adapter->pmoal_handle,
-						  &priv->tx_ba_stream_tbl_ptr,
-						  priv->adapter->callbacks.
-						  moal_spin_lock,
-						  priv->adapter->callbacks.
-						  moal_spin_unlock);
-	if (!ptx_tbl)
-		return MFALSE;
-
-	while (ptx_tbl != (TxBAStreamTbl *)&priv->tx_ba_stream_tbl_ptr) {
-		if (priv->aggr_prio_tbl[tid].ampdu_user >
-		    priv->aggr_prio_tbl[ptx_tbl->tid].ampdu_user) {
-			LEAVE();
-			return MTRUE;
-		}
-
-		ptx_tbl = ptx_tbl->pnext;
-	}
-
-	LEAVE();
-	return MFALSE;
-}
-
-/**
  *  @brief This function checks whether AMPDU is allowed or not
  *
  *  @param priv     A pointer to mlan_private
@@ -350,16 +309,10 @@ wlan_is_bastream_avail(mlan_private *priv)
 						  (pmlan_list_head)&pmpriv->
 						  tx_ba_stream_tbl_ptr);
 	}
-	if (priv->adapter->psdio_device->v15_fw_api) {
-		bastream_max =
-			ISSUPP_GETTXBASTREAM(priv->adapter->hw_dot_11n_dev_cap);
-		if (bastream_max == 0)
-			bastream_max = MLAN_MAX_TX_BASTREAM_DEFAULT;
-		return (bastream_num < bastream_max) ? MTRUE : MFALSE;
-	} else {
-		return (bastream_num <
-			MLAN_MAX_TX_BASTREAM_SUPPORTED_NOV15) ? MTRUE : MFALSE;
-	}
+	bastream_max = ISSUPP_GETTXBASTREAM(priv->adapter->hw_dot_11n_dev_cap);
+	if (bastream_max == 0)
+		bastream_max = MLAN_MAX_TX_BASTREAM_DEFAULT;
+	return (bastream_num < bastream_max) ? MTRUE : MFALSE;
 }
 
 /**
@@ -385,10 +338,7 @@ wlan_find_stream_to_delete(mlan_private *priv,
 
 	ptx_tbl = (TxBAStreamTbl *)util_peek_list(priv->adapter->pmoal_handle,
 						  &priv->tx_ba_stream_tbl_ptr,
-						  priv->adapter->callbacks.
-						  moal_spin_lock,
-						  priv->adapter->callbacks.
-						  moal_spin_unlock);
+						  MNULL, MNULL);
 	if (!ptx_tbl) {
 		LEAVE();
 		return ret;
@@ -407,7 +357,6 @@ wlan_find_stream_to_delete(mlan_private *priv,
 
 		ptx_tbl = ptx_tbl->pnext;
 	}
-
 	LEAVE();
 	return ret;
 }

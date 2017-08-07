@@ -3,7 +3,7 @@
  *  @brief This file contains the handling of RxReordering in wlan
  *  driver.
  *
- *  Copyright (C) 2008-2016, Marvell International Ltd.
+ *  Copyright (C) 2008-2017, Marvell International Ltd.
  *
  *  This software file (the "File") is distributed by Marvell International
  *  Ltd. under the terms of the GNU General Public License Version 2, June 1991
@@ -1078,12 +1078,17 @@ mlan_11n_delete_bastream_tbl(mlan_private *priv, int tid,
 		}
 		wlan_11n_delete_rxreorder_tbl_entry(priv, rx_reor_tbl_ptr);
 	} else {
-		ptxtbl = wlan_11n_get_txbastream_tbl(priv, tid, peer_mac);
+		wlan_request_ralist_lock(priv);
+		ptxtbl = wlan_11n_get_txbastream_tbl(priv, tid, peer_mac,
+						     MFALSE);
 		if (!ptxtbl) {
 			PRINTM(MWARN, "TID, RA not found in table!\n");
+			wlan_release_ralist_lock(priv);
 			LEAVE();
 			return;
 		}
+		wlan_11n_delete_txbastream_tbl_entry(priv, ptxtbl);
+		wlan_release_ralist_lock(priv);
 		tid_down = wlan_get_wmm_tid_down(priv, tid);
 		ra_list = wlan_wmm_get_ralist_node(priv, tid_down, peer_mac);
 		if (ra_list) {
@@ -1100,7 +1105,6 @@ mlan_11n_delete_bastream_tbl(mlan_private *priv, int tid,
 								     adapter);
 			}
 		}
-		wlan_11n_delete_txbastream_tbl_entry(priv, ptxtbl);
 	}
 
 	LEAVE();
@@ -1134,8 +1138,9 @@ wlan_ret_11n_addba_resp(mlan_private *priv, HostCmd_DS_COMMAND *resp)
 
 	tid = (padd_ba_rsp->block_ack_param_set & BLOCKACKPARAM_TID_MASK)
 		>> BLOCKACKPARAM_TID_POS;
-	/* Check if we had rejected the ADDBA, if yes then do not create the
-	   stream */
+	/* Check  if we had rejected the ADDBA, if yes then do not create the
+	 * stream
+	 */
 	if (padd_ba_rsp->status_code == BA_RESULT_SUCCESS) {
 		PRINTM(MCMND,
 		       "ADDBA RSP: " MACSTR
@@ -1501,27 +1506,8 @@ wlan_update_ampdu_rxwinsize(pmlan_adapter pmadapter, t_u8 coex_flag)
 #endif
 
 			} else {
-#ifdef STA_SUPPORT
-				if (priv->bss_type == MLAN_BSS_TYPE_STA)
-					priv->add_ba_param.rx_win_size =
-						MLAN_STA_AMPDU_DEF_RXWINSIZE;
-#endif
-#ifdef WIFI_DIRECT_SUPPORT
-				if (priv->bss_type == MLAN_BSS_TYPE_WIFIDIRECT)
-					priv->add_ba_param.rx_win_size =
-						pmadapter->psdio_device->
-						ampdu_info->
-						ampdu_wfd_txrxwinsize;
-#endif
-				if (priv->bss_type == MLAN_BSS_TYPE_NAN)
-					priv->add_ba_param.rx_win_size =
-						MLAN_NAN_AMPDU_DEF_TXRXWINSIZE;
-#ifdef UAP_SUPPORT
-				if (priv->bss_type == MLAN_BSS_TYPE_UAP)
-					priv->add_ba_param.rx_win_size =
-						pmadapter->psdio_device->
-						ampdu_info->ampdu_uap_rxwinsize;
-#endif
+				priv->add_ba_param.rx_win_size =
+					priv->user_rxwinsize;
 			}
 			if (pmadapter->coex_win_size &&
 			    pmadapter->coex_rx_win_size)
@@ -1543,7 +1529,7 @@ wlan_update_ampdu_rxwinsize(pmlan_adapter pmadapter, t_u8 coex_flag)
 }
 
 /**
- *  @brief check coex for
+ *  @brief This function updates ampdu rx_win_size
  *
  *  @param pmadapter    A pointer to mlan_adapter
  *

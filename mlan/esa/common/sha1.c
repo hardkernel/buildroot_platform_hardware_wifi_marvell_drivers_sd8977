@@ -2,7 +2,7 @@
  *
  *  @brief This file defines the sha1 functions
  *
- * Copyright (C) 2014-2016, Marvell International Ltd.
+ * Copyright (C) 2014-2017, Marvell International Ltd.
  *
  * This software file (the "File") is distributed by Marvell International
  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
@@ -244,19 +244,18 @@ remove the static defination from these variables.
 void
 Mrvl_SHA1ProcessMessageBlock(Mrvl_SHA1_CTX *context)
 {
-	static const UINT32 K[] = {	/* Constants defined in SHA-1 */
+	static const UINT32 K[] = {	/* Constants defined in SHA-1   */
 		0x5A827999,
 		0x6ED9EBA1,
 		0x8F1BBCDC,
 		0xCA62C1D6
 	};
-	int t;			/* Loop counter */
-	UINT32 temp;		/* Temporary word value */
+	int t;			/* Loop counter                */
+	UINT32 temp;		/* Temporary word value        */
 	UINT32 *W;
-	UINT32 A, B, C, D, E;	/* Word buffers */
+	UINT32 A, B, C, D, E;	/* Word buffers                */
 
-	/* WLAN buffers are aligned, so the context starts at a UINT32 boundary
-	 */
+	/* WLAN buffers are aligned, so the context starts at a UINT32 boundary */
 	W = context->Scratch;
 
 	for (t = 0; t < 16; t++) {

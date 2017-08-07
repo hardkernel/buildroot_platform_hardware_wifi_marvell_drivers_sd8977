@@ -2,7 +2,7 @@
  *
  *  @brief This file defines algorithm for hmac md5
  *
- * Copyright (C) 2014-2016, Marvell International Ltd.
+ * Copyright (C) 2014-2017, Marvell International Ltd.
  *
  * This software file (the "File") is distributed by Marvell International
  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
@@ -35,7 +35,7 @@ Mrvl_hmac_md5(void *priv, UINT8 *text_data, int text_len, UINT8 *key,
 {
 	phostsa_private psapriv = (phostsa_private)priv;
 	hostsa_util_fns *util_fns = &psapriv->util_fns;
-	// BufferDesc_t * pDesc = NULL;
+	//BufferDesc_t * pDesc = NULL;
 	UINT8 buf[400] = { 0 };
 	Mrvl_MD5_CTX *context;
 	unsigned char *k_pad;	/* padding - key XORd with i/opad */
@@ -46,7 +46,7 @@ Mrvl_hmac_md5(void *priv, UINT8 *text_data, int text_len, UINT8 *key,
 						 400, BML_WAIT_FOREVER);
 #endif
 	/* WLAN buffers are aligned, so k_pad start at a UINT32 boundary */
-	// k_pad = (unsigned char *)BML_DATA_PTR(pDesc);
+	//k_pad = (unsigned char *)BML_DATA_PTR(pDesc);
 	k_pad = (unsigned char *)buf;
 	context = (Mrvl_MD5_CTX *)(k_pad + 64);
 
@@ -64,7 +64,7 @@ Mrvl_hmac_md5(void *priv, UINT8 *text_data, int text_len, UINT8 *key,
 
 	/* the HMAC_MD5 transform looks like: */
 	/* */
-	/* MD5(K XOR opad, MD5(K XOR ipad, text)) */
+	/*  MD5(K XOR opad, MD5(K XOR ipad, text)) */
 	/* */
 	/* where K is an n byte key */
 	/* ipad is the byte 0x36 repeated 64 times */
@@ -82,13 +82,8 @@ Mrvl_hmac_md5(void *priv, UINT8 *text_data, int text_len, UINT8 *key,
 
 	/* perform inner MD5 */
 	wpa_MD5Init(context);	/* init context for 1st pass */
-	wpa_MD5Update((void *)priv, context, k_pad, 64);	/* start with
-								   inner pad */
-	wpa_MD5Update((void *)priv, context, text_data, text_len);	/* then
-									   text
-									   of
-									   datagram
-									 */
+	wpa_MD5Update((void *)priv, context, k_pad, 64);	/* start with inner pad */
+	wpa_MD5Update((void *)priv, context, text_data, text_len);	/* then text of datagram */
 	wpa_MD5Final((void *)priv, digest, context);	/* finish up 1st pass */
 
 	/* start out by storing key in pads */

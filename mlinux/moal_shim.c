@@ -2,7 +2,7 @@
   *
   * @brief This file contains the callback functions registered to MLAN
   *
-  * Copyright (C) 2008-2016, Marvell International Ltd.
+  * Copyright (C) 2008-2017, Marvell International Ltd.
   *
   * This software file (the "File") is distributed by Marvell International
   * Ltd. under the terms of the GNU General Public License Version 2, June 1991
@@ -33,6 +33,7 @@ Change log:
 #include "moal_cfg80211.h"
 #include "moal_cfgvendor.h"
 #endif
+extern int drv_mode;
 
 /********************************************************
 		Local Variables
@@ -55,9 +56,22 @@ extern int hw_test;
 #ifdef ANDROID_KERNEL
 extern int wakelock_timeout;
 #endif
+#if CFG80211_VERSION_CODE >= KERNEL_VERSION(3, 14, 0)
 #if defined(STA_CFG80211) || defined(UAP_CFG80211)
 extern int dfs_offload;
 #endif
+#endif
+
+/** napi support*/
+extern int napi;
+
+typedef MLAN_PACK_START struct {
+	t_u32 t4;
+	t_u8 t4_error;
+	t_u32 t1;
+	t_u8 t1_error;
+	t_u64 egress_time;
+} MLAN_PACK_END confirm_timestamps;
 
 /********************************************************
 		Local Functions
@@ -507,6 +521,27 @@ moal_get_fw_data(IN t_void *pmoal_handle,
  *
  *  @param pmoal_handle Pointer to the MOAL context
  *  @param status   The status code for mlan_init_fw request
+ *  @param phw      pointer to mlan_hw_info
+ *  @param ptbl     pointer to mplan_bss_tbl
+ *  @return         MLAN_STATUS_SUCCESS
+ */
+mlan_status
+moal_get_hw_spec_complete(IN t_void *pmoal_handle, IN mlan_status status,
+			  IN mlan_hw_info * phw, IN pmlan_bss_tbl ptbl)
+{
+	ENTER();
+	if (status == MLAN_STATUS_SUCCESS) {
+		PRINTM(MCMND, "Get Hw Spec done, fw_cap=0x%x\n", phw->fw_cap);
+	}
+	LEAVE();
+	return MLAN_STATUS_SUCCESS;
+}
+
+/**
+ *  @brief This function is called when MLAN completes the initialization firmware.
+ *
+ *  @param pmoal_handle Pointer to the MOAL context
+ *  @param status   The status code for mlan_init_fw request
  *
  *  @return         MLAN_STATUS_SUCCESS
  */
@@ -709,7 +744,7 @@ moal_send_packet_complete(IN t_void *pmoal_handle,
 						       index);
 					}
 				}
-#else /* #if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,29) */
+#else /*#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,29) */
 				if (atomic_dec_return(&handle->tx_pending) <
 				    LOW_TX_PENDING) {
 					int i;
@@ -742,7 +777,7 @@ moal_send_packet_complete(IN t_void *pmoal_handle,
 #endif
 					}
 				}
-#endif /* #if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,29) */
+#endif /*#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,29) */
 			}
 		}
 		if (skb)
@@ -885,16 +920,15 @@ moal_recv_packet_to_mon_if(IN moal_handle *handle, IN pmlan_buffer pmbuf)
 					    (1 <<
 					     IEEE80211_RADIOTAP_DBM_ANTNOISE) |
 					    (1 << IEEE80211_RADIOTAP_ANTENNA));
-			// Timstamp
+			//Timstamp
 			rth->body.timestamp = cpu_to_le64(jiffies);
-			// Flags
+			//Flags
 			rth->body.flags = (rt_info.extra_info.flags &
 					   ~(RADIOTAP_FLAGS_USE_SGI_HT |
 					     RADIOTAP_FLAGS_WITH_FRAGMENT |
 					     RADIOTAP_FLAGS_WEP_ENCRYPTION |
 					     RADIOTAP_FLAGS_FAILED_FCS_CHECK));
-			// reverse fail fcs, 1 means pass FCS in FW, but means
-			// fail FCS in radiotap
+			//reverse fail fcs, 1 means pass FCS in FW, but means fail FCS in radiotap
 			rth->body.flags |=
 				(~rt_info.extra_info.
 				 flags) & RADIOTAP_FLAGS_FAILED_FCS_CHECK;
@@ -916,21 +950,18 @@ moal_recv_packet_to_mon_if(IN moal_handle *handle, IN pmlan_buffer pmbuf)
 					(t_u8 *)dot11_hdr +
 					ieee80211_hdrlen(dot11_hdr->
 							 frame_control);
-				if (!(*(payload + 3) & 0x20))	// ExtIV bit
-								// shall be 0
-								// for WEP
-								// frame
+				if (!(*(payload + 3) & 0x20))	//ExtIV bit shall be 0 for WEP frame
 					rth->body.flags |=
 						RADIOTAP_FLAGS_WEP_ENCRYPTION;
 			}
-			// Rate, t_u8 only apply for LG mode
+			//Rate, t_u8 only apply for LG mode
 			if (format == MLAN_RATE_FORMAT_LG) {
 				rth->hdr.it_present |=
 					cpu_to_le32(1 <<
 						    IEEE80211_RADIOTAP_RATE);
 				rth->body.rate = rt_info.rate_info.bitrate;
 			}
-			// Channel
+			//Channel
 			rth->body.channel.flags = 0;
 			rth->body.channel.frequency =
 				cpu_to_le16(handle->mon_if->chandef.chan->
@@ -955,11 +986,11 @@ moal_recv_packet_to_mon_if(IN moal_handle *handle, IN pmlan_buffer pmbuf)
 				rth->body.channel.flags |=
 					cpu_to_le16
 					(CHANNEL_FLAGS_ONLY_PASSIVSCAN_ALLOW);
-			// Antenna
+			//Antenna
 			rth->body.antenna_signal = -(rt_info.nf - rt_info.snr);
 			rth->body.antenna_noise = -rt_info.nf;
 			rth->body.antenna = rt_info.antenna;
-			// MCS
+			//MCS
 			if (format == MLAN_RATE_FORMAT_HT) {
 				rth->hdr.it_present |=
 					cpu_to_le32(1 <<
@@ -968,22 +999,21 @@ moal_recv_packet_to_mon_if(IN moal_handle *handle, IN pmlan_buffer pmbuf)
 					rt_info.extra_info.mcs_known;
 				rth->body.mcs.flags =
 					rt_info.extra_info.mcs_flags;
-				// MCS mcs
+				//MCS mcs
 				rth->body.mcs.known |=
 					MCS_KNOWN_MCS_INDEX_KNOWN;
 				rth->body.mcs.mcs = rt_info.rate_info.mcs_index;
-				// MCS bw
+				//MCS bw
 				rth->body.mcs.known |= MCS_KNOWN_BANDWIDTH;
-				rth->body.mcs.flags &= ~(0x03);	// Clear, 20MHz
-								// as default
+				rth->body.mcs.flags &= ~(0x03);	//Clear, 20MHz as default
 				if (bw == 1)
 					rth->body.mcs.flags |= RX_BW_40;
-				// MCS gi
+				//MCS gi
 				rth->body.mcs.known |= MCS_KNOWN_GUARD_INTERVAL;
 				rth->body.mcs.flags &= ~(1 << 2);
 				if (gi)
 					rth->body.mcs.flags |= gi << 2;
-				// MCS FEC
+				//MCS FEC
 				rth->body.mcs.known |= MCS_KNOWN_FEC_TYPE;
 				rth->body.mcs.flags &= ~(1 << 4);
 				if (ldpc)
@@ -1052,8 +1082,7 @@ moal_recv_packet(IN t_void *pmoal_handle, IN pmlan_buffer pmbuf)
 				pmbuf->pdesc = NULL;
 				pmbuf->pbuf = NULL;
 				pmbuf->data_offset = pmbuf->data_len = 0;
-				/* pkt been submit to kernel, no need to free
-				   by mlan */
+				/* pkt been submit to kernel, no need to free by mlan */
 				status = MLAN_STATUS_PENDING;
 				atomic_dec(&handle->mbufalloc_count);
 			} else {
@@ -1145,6 +1174,9 @@ moal_recv_event(IN t_void *pmoal_handle, IN pmlan_event pmevent)
 #if defined(SDIO_SUSPEND_RESUME)
 	mlan_ds_ps_info pm_info;
 #endif
+	apinfo *pinfo = NULL;
+	MrvlIEtypesHeader_t *tlv = NULL;
+	t_u16 tlv_type = 0, tlv_len = 0, tlv_buf_left = 0;
 
 	ENTER();
 
@@ -1254,10 +1286,10 @@ moal_recv_event(IN t_void *pmoal_handle, IN pmlan_event pmevent)
 					spin_lock_irqsave(&priv->phandle->
 							  scan_req_lock, flags);
 					if (priv->phandle->scan_request) {
-						cfg80211_scan_done(priv->
-								   phandle->
-								   scan_request,
-								   MFALSE);
+						woal_cfg80211_scan_done(priv->
+									phandle->
+									scan_request,
+									MFALSE);
 						priv->phandle->scan_request =
 							NULL;
 					}
@@ -1407,7 +1439,7 @@ moal_recv_event(IN t_void *pmoal_handle, IN pmlan_event pmevent)
 #endif
 #ifdef STA_CFG80211
 		if (IS_STA_CFG80211(cfg80211_wext)) {
-#if LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 35) || defined(COMPAT_WIRELESS)
+#if CFG80211_VERSION_CODE > KERNEL_VERSION(2, 6, 35)
 			cfg80211_cqm_rssi_notify(priv->netdev,
 						 NL80211_CQM_RSSI_THRESHOLD_EVENT_LOW,
 						 GFP_KERNEL);
@@ -1429,7 +1461,7 @@ moal_recv_event(IN t_void *pmoal_handle, IN pmlan_event pmevent)
 #ifdef STA_CFG80211
 		if (IS_STA_CFG80211(cfg80211_wext)) {
 			if (!priv->mrvl_rssi_low) {
-#if LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 35) || defined(COMPAT_WIRELESS)
+#if CFG80211_VERSION_CODE > KERNEL_VERSION(2, 6, 35)
 				cfg80211_cqm_rssi_notify(priv->netdev,
 							 NL80211_CQM_RSSI_THRESHOLD_EVENT_HIGH,
 							 GFP_KERNEL);
@@ -1525,7 +1557,7 @@ moal_recv_event(IN t_void *pmoal_handle, IN pmlan_event pmevent)
 						   CUS_EVT_PRE_BEACON_LOST);
 #endif
 #ifdef STA_CFG80211
-#if LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 35) || defined(COMPAT_WIRELESS)
+#if CFG80211_VERSION_CODE > KERNEL_VERSION(2, 6, 35)
 		if (IS_STA_CFG80211(cfg80211_wext)) {
 			struct cfg80211_bss *bss = NULL;
 			bss = cfg80211_get_bss(priv->wdev->wiphy, NULL,
@@ -1585,12 +1617,20 @@ moal_recv_event(IN t_void *pmoal_handle, IN pmlan_event pmevent)
 		queue_work(priv->phandle->workqueue, &priv->phandle->main_work);
 		break;
 	case MLAN_EVENT_ID_DRV_FLUSH_RX_WORK:
+		if (napi) {
+			napi_synchronize(&priv->phandle->napi_rx);
+			break;
+		}
 		flush_workqueue(priv->phandle->rx_workqueue);
 		break;
 	case MLAN_EVENT_ID_DRV_FLUSH_MAIN_WORK:
 		flush_workqueue(priv->phandle->workqueue);
 		break;
 	case MLAN_EVENT_ID_DRV_DEFER_RX_WORK:
+		if (napi) {
+			napi_schedule(&priv->phandle->napi_rx);
+			break;
+		}
 		queue_work(priv->phandle->rx_workqueue,
 			   &priv->phandle->rx_work);
 		break;
@@ -1600,7 +1640,7 @@ moal_recv_event(IN t_void *pmoal_handle, IN pmlan_event pmevent)
 		woal_broadcast_event(priv, CUS_EVT_DRIVER_HANG,
 				     strlen(CUS_EVT_DRIVER_HANG));
 #ifdef STA_CFG80211
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 14, 0)
+#if CFG80211_VERSION_CODE >= KERNEL_VERSION(3, 14, 0)
 		if (IS_STA_OR_UAP_CFG80211(cfg80211_wext))
 			woal_cfg80211_vendor_event(priv, event_hang,
 						   CUS_EVT_DRIVER_HANG,
@@ -1623,7 +1663,7 @@ moal_recv_event(IN t_void *pmoal_handle, IN pmlan_event pmevent)
 #ifdef STA_CFG80211
 		if (IS_STA_CFG80211(cfg80211_wext)) {
 			priv->last_event |= EVENT_BG_SCAN_REPORT;
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 2, 0) || defined(COMPAT_WIRELESS)
+#if CFG80211_VERSION_CODE >= KERNEL_VERSION(3, 2, 0)
 			if (priv->sched_scanning &&
 			    !priv->phandle->cfg80211_suspend) {
 				mlan_scan_resp scan_resp;
@@ -1634,7 +1674,7 @@ moal_recv_event(IN t_void *pmoal_handle, IN pmlan_event pmevent)
 			}
 #endif
 			if (!hw_test && priv->roaming_enabled
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 2, 0) || defined(COMPAT_WIRELESS)
+#if CFG80211_VERSION_CODE >= KERNEL_VERSION(3, 2, 0)
 			    && !priv->phandle->cfg80211_suspend
 #endif
 				) {
@@ -1651,7 +1691,7 @@ moal_recv_event(IN t_void *pmoal_handle, IN pmlan_event pmevent)
 		break;
 	case MLAN_EVENT_ID_FW_BG_SCAN_STOPPED:
 #ifdef STA_CFG80211
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 2, 0) || defined(COMPAT_WIRELESS)
+#if CFG80211_VERSION_CODE >= KERNEL_VERSION(3, 2, 0)
 		if (IS_STA_CFG80211(cfg80211_wext)) {
 			if (priv->sched_scanning) {
 				cfg80211_sched_scan_stopped(priv->wdev->wiphy);
@@ -1664,7 +1704,7 @@ moal_recv_event(IN t_void *pmoal_handle, IN pmlan_event pmevent)
 		break;
 	case MLAN_EVENT_ID_DRV_BGSCAN_RESULT:
 #ifdef STA_CFG80211
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 2, 0) || defined(COMPAT_WIRELESS)
+#if CFG80211_VERSION_CODE >= KERNEL_VERSION(3, 2, 0)
 		if (IS_STA_CFG80211(cfg80211_wext)) {
 			if (priv->sched_scanning &&
 			    !priv->phandle->cfg80211_suspend) {
@@ -1680,7 +1720,7 @@ moal_recv_event(IN t_void *pmoal_handle, IN pmlan_event pmevent)
 #endif
 		break;
 #ifdef UAP_CFG80211
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 12, 0)
+#if CFG80211_VERSION_CODE >= KERNEL_VERSION(3, 12, 0)
 	case MLAN_EVENT_ID_FW_CHANNEL_REPORT_RDY:
 		if (priv->phandle->is_cac_timer_set) {
 			t_u8 radar_detected = pmevent->event_buf[0];
@@ -1690,7 +1730,7 @@ moal_recv_event(IN t_void *pmoal_handle, IN pmlan_event pmevent)
 					&priv->phandle->cac_timer);
 			priv->phandle->is_cac_timer_set = MFALSE;
 			if (radar_detected) {
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 14, 0)
+#if CFG80211_VERSION_CODE >= KERNEL_VERSION(3, 14, 0)
 				cfg80211_cac_event(priv->netdev,
 						   &priv->phandle->dfs_channel,
 						   NL80211_RADAR_CAC_ABORTED,
@@ -1704,7 +1744,7 @@ moal_recv_event(IN t_void *pmoal_handle, IN pmlan_event pmevent)
 						     &priv->phandle->
 						     dfs_channel, GFP_KERNEL);
 			} else {
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 14, 0)
+#if CFG80211_VERSION_CODE >= KERNEL_VERSION(3, 14, 0)
 				cfg80211_cac_event(priv->netdev,
 						   &priv->phandle->dfs_channel,
 						   NL80211_RADAR_CAC_FINISHED,
@@ -1726,12 +1766,11 @@ moal_recv_event(IN t_void *pmoal_handle, IN pmlan_event pmevent)
 				PRINTM(MEVENT, "radar detected during CAC \n");
 				woal_cancel_timer(&priv->phandle->cac_timer);
 				priv->phandle->is_cac_timer_set = MFALSE;
-				/* downstream: cancel the unfinished CAC in
-				   Firmware */
+				/* downstream: cancel the unfinished CAC in Firmware */
 				woal_11h_cancel_chan_report_ioctl(priv,
 								  MOAL_NO_WAIT);
 				/* upstream: inform cfg80211 */
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 14, 0)
+#if CFG80211_VERSION_CODE >= KERNEL_VERSION(3, 14, 0)
 				cfg80211_cac_event(priv->netdev,
 						   &priv->phandle->dfs_channel,
 						   NL80211_RADAR_CAC_ABORTED,
@@ -1754,7 +1793,7 @@ moal_recv_event(IN t_void *pmoal_handle, IN pmlan_event pmevent)
 			}
 		} else {
 			PRINTM(MEVENT, "radar detected during BSS active \n");
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 14, 0)
+#if CFG80211_VERSION_CODE >= KERNEL_VERSION(3, 14, 0)
 			if (dfs_offload)
 				woal_cfg80211_dfs_vendor_event(priv,
 							       event_dfs_radar_detected,
@@ -1778,16 +1817,17 @@ moal_recv_event(IN t_void *pmoal_handle, IN pmlan_event pmevent)
 		break;
 #endif /* STA_SUPPORT */
 	case MLAN_EVENT_ID_FW_CHAN_SWITCH_COMPLETE:
-#if defined(UAP_CFG80211)
-		if (IS_UAP_CFG80211(cfg80211_wext)) {
+#if defined(UAP_SUPPORT)
+		if (priv->bss_role == MLAN_BSS_ROLE_UAP) {
+#ifdef UAP_CFG80211
 			chan_band_info *pchan_info =
 				(chan_band_info *) pmevent->event_buf;
-			if (priv->bss_role == MLAN_BSS_ROLE_UAP) {
+			if (IS_UAP_CFG80211(cfg80211_wext)) {
 				PRINTM(MMSG,
 				       "CSA/ECSA: Switch to new channel %d complete!\n",
 				       pchan_info->channel);
 				priv->channel = pchan_info->channel;
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,12,0)
+#if CFG80211_VERSION_CODE >= KERNEL_VERSION(3,12,0)
 				if (priv->csa_chan.chan &&
 				    (pchan_info->channel ==
 				     priv->csa_chan.chan->hw_value)) {
@@ -1796,32 +1836,31 @@ moal_recv_event(IN t_void *pmoal_handle, IN pmlan_event pmevent)
 						      cfg80211_chan_def));
 				}
 #endif
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,8,0)
+#if CFG80211_VERSION_CODE >= KERNEL_VERSION(3,8,0)
 				if (priv->uap_host_based) {
 					PRINTM(MEVENT,
 					       "UAP: 11n=%d, chan=%d, center_chan=%d, band=%d, width=%d, 2Offset=%d\n",
 					       pchan_info->is_11n_enabled,
 					       pchan_info->channel,
 					       pchan_info->center_chan,
-					       pchan_info->band_config.chanBand,
-					       pchan_info->band_config.
-					       chanWidth,
-					       pchan_info->band_config.
-					       chan2Offset);
+					       pchan_info->bandcfg.chanBand,
+					       pchan_info->bandcfg.chanWidth,
+					       pchan_info->bandcfg.chan2Offset);
 					woal_cfg80211_notify_uap_channel(priv,
 									 pchan_info);
 				}
 #endif
 			}
-			if (priv->uap_tx_blocked) {
-				if (!netif_carrier_ok(priv->netdev))
-					netif_carrier_on(priv->netdev);
-				woal_start_queue(priv->netdev);
-				priv->uap_tx_blocked = MFALSE;
-			}
-			priv->phandle->chsw_wait_q_woken = MTRUE;
-			wake_up_interruptible(&priv->phandle->chsw_wait_q);
+#endif
 		}
+		if (priv->uap_tx_blocked) {
+			if (!netif_carrier_ok(priv->netdev))
+				netif_carrier_on(priv->netdev);
+			woal_start_queue(priv->netdev);
+			priv->uap_tx_blocked = MFALSE;
+		}
+		priv->phandle->chsw_wait_q_woken = MTRUE;
+		wake_up_interruptible(&priv->phandle->chsw_wait_q);
 #endif
 		break;
 	case MLAN_EVENT_ID_FW_STOP_TX:
@@ -1847,7 +1886,7 @@ moal_recv_event(IN t_void *pmoal_handle, IN pmlan_event pmevent)
 		if (pmpriv)
 			woal_broadcast_event(pmpriv, CUS_EVT_HS_WAKEUP,
 					     strlen(CUS_EVT_HS_WAKEUP));
-#endif /* STA_SUPPORT */
+#endif /*STA_SUPPORT */
 #ifdef UAP_SUPPORT
 		pmpriv = woal_get_priv((moal_handle *)pmoal_handle,
 				       MLAN_BSS_ROLE_UAP);
@@ -1945,7 +1984,7 @@ moal_recv_event(IN t_void *pmoal_handle, IN pmlan_event pmevent)
 #endif
 #endif
 		break;
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 5, 0)
+#if CFG80211_VERSION_CODE >= KERNEL_VERSION(3, 5, 0)
 	case MLAN_EVENT_ID_DRV_UAP_CHAN_INFO:
 #ifdef UAP_CFG80211
 		if (IS_UAP_CFG80211(cfg80211_wext)) {
@@ -1955,9 +1994,9 @@ moal_recv_event(IN t_void *pmoal_handle, IN pmlan_event pmevent)
 			       "UAP: 11n=%d, chan=%d, center_chan=%d, band=%d, width=%d, 2Offset=%d\n",
 			       pchan_info->is_11n_enabled, pchan_info->channel,
 			       pchan_info->center_chan,
-			       pchan_info->band_config.chanBand,
-			       pchan_info->band_config.chanWidth,
-			       pchan_info->band_config.chan2Offset);
+			       pchan_info->bandcfg.chanBand,
+			       pchan_info->bandcfg.chanWidth,
+			       pchan_info->bandcfg.chan2Offset);
 			if (priv->uap_host_based &&
 			    (priv->channel != pchan_info->channel))
 				woal_cfg80211_notify_uap_channel(priv,
@@ -1979,25 +2018,6 @@ moal_recv_event(IN t_void *pmoal_handle, IN pmlan_event pmevent)
 		woal_broadcast_event(priv, pmevent->event_buf,
 				     pmevent->event_len);
 		break;
-	case MLAN_EVENT_ID_UAP_FW_MIC_COUNTERMEASURES:
-		{
-			t_u16 status = 0;
-			status = *(t_u16 *)(pmevent->event_buf + 4);
-			if (status) {
-				priv->media_connected = MFALSE;
-				woal_stop_queue(priv->netdev);
-				if (netif_carrier_ok(priv->netdev))
-					netif_carrier_off(priv->netdev);
-			} else {
-				priv->media_connected = MTRUE;
-				if (!netif_carrier_ok(priv->netdev))
-					netif_carrier_on(priv->netdev);
-				woal_wake_queue(priv->netdev);
-			}
-			woal_broadcast_event(priv, pmevent->event_buf,
-					     pmevent->event_len);
-		}
-		break;
 #ifdef WIFI_DIRECT_SUPPORT
 #if defined(STA_CFG80211) || defined(UAP_CFG80211)
 	case MLAN_EVENT_ID_FW_REMAIN_ON_CHAN_EXPIRED:
@@ -2009,7 +2029,7 @@ moal_recv_event(IN t_void *pmoal_handle, IN pmlan_event pmevent)
 			if (priv->phandle->cookie &&
 			    !priv->phandle->is_remain_timer_set) {
 				cfg80211_remain_on_channel_expired(
-#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 6, 0)
+#if CFG80211_VERSION_CODE < KERNEL_VERSION(3, 6, 0)
 									  priv->
 									  netdev,
 #else
@@ -2022,7 +2042,7 @@ moal_recv_event(IN t_void *pmoal_handle, IN pmlan_event pmevent)
 									  &priv->
 									  phandle->
 									  chan,
-#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 8, 0)
+#if CFG80211_VERSION_CODE < KERNEL_VERSION(3, 8, 0)
 									  priv->
 									  phandle->
 									  channel_type,
@@ -2050,9 +2070,9 @@ moal_recv_event(IN t_void *pmoal_handle, IN pmlan_event pmevent)
 				 * like T3T and pxa978T 3.0.31 JB, these
 				 * patch are needed to support
 				 * wpa_supplicant 2.x */
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 0, 31) || defined(COMPAT_WIRELESS)
+#if CFG80211_VERSION_CODE >= KERNEL_VERSION(3, 0, 31)
 			if (pmevent->event_len > ETH_ALEN) {
-#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 0, 0)
+#if CFG80211_VERSION_CODE < KERNEL_VERSION(4, 0, 0)
 				/* set station info filled flag */
 				sinfo.filled |= STATION_INFO_ASSOC_REQ_IES;
 #endif
@@ -2100,7 +2120,7 @@ moal_recv_event(IN t_void *pmoal_handle, IN pmlan_event pmevent)
 	case MLAN_EVENT_ID_UAP_FW_STA_DISCONNECT:
 #ifdef UAP_CFG80211
 		if (IS_UAP_CFG80211(cfg80211_wext)) {
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 0, 0) || defined(COMPAT_WIRELESS)
+#if CFG80211_VERSION_CODE >= KERNEL_VERSION(3, 0, 0)
 			/* skip 2 bytes extra header will get the mac address */
 			if (priv->netdev && priv->wdev)
 				cfg80211_del_sta(priv->netdev,
@@ -2140,12 +2160,11 @@ moal_recv_event(IN t_void *pmoal_handle, IN pmlan_event pmevent)
 #ifdef WIFI_DIRECT_SUPPORT
 #if defined(STA_CFG80211) || defined(UAP_CFG80211)
 		if (IS_STA_OR_UAP_CFG80211(cfg80211_wext)) {
-#if LINUX_VERSION_CODE >= WIFI_DIRECT_KERNEL_VERSION
+#if CFG80211_VERSION_CODE >= WIFI_DIRECT_KERNEL_VERSION
 			if (priv->netdev
 			    && priv->netdev->ieee80211_ptr->wiphy->mgmt_stypes
 			    && priv->mgmt_subtype_mask) {
-				/* frmctl + durationid + addr1 + addr2 + addr3
-				   + seqctl */
+				/* frmctl + durationid + addr1 + addr2 + addr3 + seqctl */
 #define PACKET_ADDR4_POS        (2 + 2 + 6 + 6 + 6 + 2)
 				t_u8 *pkt;
 				int freq =
@@ -2189,9 +2208,10 @@ moal_recv_event(IN t_void *pmoal_handle, IN pmlan_event pmevent)
 									    wiphy,
 									    freq),
 									   MFALSE);
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 4, 0)
+
+#if CFG80211_VERSION_CODE >= KERNEL_VERSION(3, 4, 0)
 				cfg80211_rx_mgmt(
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 6, 0)
+#if CFG80211_VERSION_CODE >= KERNEL_VERSION(3, 6, 0)
 							priv->wdev,
 #else
 							priv->netdev,
@@ -2205,10 +2225,10 @@ moal_recv_event(IN t_void *pmoal_handle, IN pmlan_event pmevent)
 							sizeof(pmevent->
 							       event_id) -
 							MLAN_MAC_ADDR_LENGTH
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 12, 0)
+#if CFG80211_VERSION_CODE >= KERNEL_VERSION(3, 12, 0)
 							, 0
 #endif
-#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 18, 0)
+#if CFG80211_VERSION_CODE < KERNEL_VERSION(3, 18, 0)
 							, GFP_ATOMIC
 #endif
 					);
@@ -2247,8 +2267,7 @@ moal_recv_event(IN t_void *pmoal_handle, IN pmlan_event pmevent)
 		}
 		break;
 	case MLAN_EVENT_ID_DRV_MEAS_REPORT:
-		/* We have received measurement report, wakeup measurement wait
-		   queue */
+		/* We have received measurement report, wakeup measurement wait queue */
 		PRINTM(MINFO, "Measurement Report\n");
 		/* Going out of CAC checking period */
 		if (priv->phandle->cac_period == MTRUE) {
@@ -2296,7 +2315,7 @@ moal_recv_event(IN t_void *pmoal_handle, IN pmlan_event pmevent)
 			}
 #ifdef UAP_SUPPORT
 #if defined(STA_CFG80211) || defined(UAP_CFG80211)
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 14, 0)
+#if CFG80211_VERSION_CODE >= KERNEL_VERSION(3, 14, 0)
 			if (priv->uap_host_based && dfs_offload)
 				woal_cfg80211_dfs_vendor_event(priv,
 							       event_dfs_cac_finished,
@@ -2308,7 +2327,7 @@ moal_recv_event(IN t_void *pmoal_handle, IN pmlan_event pmevent)
 		}
 		break;
 	case MLAN_EVENT_ID_DRV_TDLS_TEARDOWN_REQ:
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 8, 0)
+#if CFG80211_VERSION_CODE >= KERNEL_VERSION(3, 8, 0)
 #ifdef STA_CFG80211
 		if (IS_STA_CFG80211(cfg80211_wext)) {
 			tdls_tear_down_event *tdls_event =
@@ -2340,14 +2359,105 @@ moal_recv_event(IN t_void *pmoal_handle, IN pmlan_event pmevent)
 				bool ack;
 				struct sk_buff *skb =
 					(struct sk_buff *)tx_info->tx_skb;
+				list_del(&tx_info->link);
+				spin_unlock_irqrestore(&priv->tx_stat_lock,
+						       flag);
 				if (!tx_status->status)
 					ack = true;
 				else
 					ack = false;
-				PRINTM(MEVENT, "Wlan: Tx status=%d\n", ack);
+				{
+					t_u8 catagory = 0, action =
+						0, dialog_token = 0;
+					catagory =
+						((struct ieee80211_mgmt *)skb->
+						 data)->u.action.category;
+					action = *(&
+						   ((struct ieee80211_mgmt *)
+						    skb->data)->u.action.
+						   category + 1);
+					dialog_token = *(&((struct ieee80211_mgmt *)skb->data)->u.action.category + 2);	//dt is 2 bytes after category
+					PRINTM(MEVENT,
+					       "Wlan: Tx status=%d, cat = %d, act = %d, dt = %d\n",
+					       ack, catagory, action,
+					       dialog_token);
+					/* this is a tx done for timining measurement action frame
+					 * so we need to send the tx timestamp of txed frame back to supplicant
+					 * for this send the timestamps along with the tx_status event buffer */
+					if (catagory ==
+					    IEEE_MGMT_ACTION_CATEGORY_UNPROTECT_WNM
+					    && action == 0x1) {
+						/* create a timestamp buffer to send to host supplicant */
+						confirm_timestamps tsbuff =
+							{ 0 };
+
+						PRINTM(MEVENT,
+						       "Wlan: Tx t1=%lld, t4 = %lld, t1_error = %lld, t4_error=%lld\n",
+						       tx_status->t1_tstamp,
+						       tx_status->t4_tstamp,
+						       tx_status->t1_error,
+						       tx_status->t4_error);
+
+						/* for timestamps only use lower 32-bits as spec defines 11v timestamps as 32-bits */
+						tsbuff.t4 =
+							(u32)
+							woal_le32_to_cpu
+							(tx_status->t4_tstamp);
+						tsbuff.t1 =
+							(u32)
+							woal_le32_to_cpu
+							(tx_status->t1_tstamp);
+						tsbuff.t4_error =
+							(u8)tx_status->t4_error;
+						tsbuff.t1_error =
+							(u8)tx_status->t4_error;
+						tsbuff.egress_time =
+							(u64)
+							woal_le64_to_cpu
+							(tx_status->
+							 egress_time);
+
+						if (skb_tailroom(skb) <
+						    sizeof(confirm_timestamps))
+						{
+							struct sk_buff *new_skb
+								= NULL;
+							PRINTM(MWARN,
+							       "Tx Status: Insufficient skb tailroom %d\n",
+							       skb_tailroom
+							       (skb));
+							/* Insufficient skb tailroom - allocate a new skb */
+							new_skb =
+								skb_copy_expand
+								(skb, 0,
+								 sizeof
+								 (confirm_timestamps),
+								 GFP_ATOMIC);
+							if (unlikely(!new_skb)) {
+								PRINTM(MERROR,
+								       "Tx Status: Cannot allocate skb\n");
+								dev_kfree_skb_any
+									(skb);
+								goto done;
+							}
+							skb = new_skb;
+							PRINTM(MINFO,
+							       "new skb tailroom %d\n",
+							       skb_tailroom
+							       (skb));
+						}
+						memcpy(skb_put
+						       (skb,
+							sizeof
+							(confirm_timestamps)),
+						       &tsbuff,
+						       sizeof
+						       (confirm_timestamps));
+					}
+				}
 				if (tx_info->tx_cookie) {
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 37) || defined(COMPAT_WIRELESS)
-#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 6, 0)
+#if CFG80211_VERSION_CODE >= KERNEL_VERSION(2, 6, 37)
+#if CFG80211_VERSION_CODE < KERNEL_VERSION(3, 6, 0)
 					cfg80211_mgmt_tx_status(priv->netdev,
 								tx_info->
 								tx_cookie,
@@ -2364,16 +2474,18 @@ moal_recv_event(IN t_void *pmoal_handle, IN pmlan_event pmevent)
 #endif
 #endif
 				}
-				list_del(&tx_info->link);
 				dev_kfree_skb_any(skb);
 				kfree(tx_info);
-			}
-			spin_unlock_irqrestore(&priv->tx_stat_lock, flag);
+			} else
+				spin_unlock_irqrestore(&priv->tx_stat_lock,
+						       flag);
 		}
 #endif
 		break;
 	case MLAN_EVENT_ID_DRV_FT_RESPONSE:
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,10,0)
+		if (priv->phandle->fw_roam_enable)
+			break;
+#if CFG80211_VERSION_CODE >= KERNEL_VERSION(3,10,0)
 #ifdef STA_CFG80211
 		if (IS_STA_CFG80211(cfg80211_wext)) {
 			struct cfg80211_ft_event_params ft_event;
@@ -2391,11 +2503,9 @@ moal_recv_event(IN t_void *pmoal_handle, IN pmlan_event pmevent)
 			ft_event.target_ap = priv->target_ap_bssid;
 			ft_event.ies = pmevent->event_buf + ETH_ALEN;
 			ft_event.ies_len = pmevent->event_len - ETH_ALEN;
-			/* TSPEC info is needed by RIC, However the TS
-			   operation is configured by mlanutl */
-			/* So do not add RIC temporally */
-			/* when add RIC, 1. query TS status, 2. copy tspec from
-			   addts command */
+			/*TSPEC info is needed by RIC, However the TS operation is configured by mlanutl */
+			/*So do not add RIC temporally */
+			/*when add RIC, 1. query TS status, 2. copy tspec from addts command */
 			ft_event.ric_ies = NULL;
 			ft_event.ric_ies_len = 0;
 
@@ -2410,6 +2520,65 @@ moal_recv_event(IN t_void *pmoal_handle, IN pmlan_event pmevent)
 		}
 #endif
 #endif
+		break;
+	case MLAN_EVENT_ID_DRV_ROAM_OFFLOAD_ENABLE:
+#ifdef STA_CFG80211
+#if CFG80211_VERSION_CODE >= KERNEL_VERSION(3, 14, 0)
+		woal_cfg80211_vendor_event(priv, event_set_key_mgmt_offload,
+					   pmevent->event_buf,
+					   pmevent->event_len);
+#endif
+#endif
+		break;
+	case MLAN_EVENT_ID_FW_ROAM_OFFLOAD_RESULT:
+		memcpy(priv->cfg_bssid, pmevent->event_buf, ETH_ALEN);
+		tlv = (MrvlIEtypesHeader_t *)((t_u8 *)pmevent->event_buf +
+					      MLAN_MAC_ADDR_LENGTH);
+		tlv_buf_left = pmevent->event_len - MLAN_MAC_ADDR_LENGTH;
+		while (tlv_buf_left >= sizeof(MrvlIEtypesHeader_t)) {
+			tlv_type = woal_le16_to_cpu(tlv->type);
+			tlv_len = woal_le16_to_cpu(tlv->len);
+
+			if (tlv_buf_left <
+			    (tlv_len + sizeof(MrvlIEtypesHeader_t))) {
+				PRINTM(MERROR,
+				       "Error processing firmware roam success TLVs, bytes left < TLV length\n");
+				break;
+			}
+
+			switch (tlv_type) {
+			case TLV_TYPE_APINFO:
+				pinfo = (apinfo *) tlv;
+				break;
+			default:
+				break;
+			}
+			tlv_buf_left -= tlv_len + sizeof(MrvlIEtypesHeader_t);
+			tlv = (MrvlIEtypesHeader_t *)((t_u8 *)tlv + tlv_len +
+						      sizeof
+						      (MrvlIEtypesHeader_t));
+		}
+		if (!pinfo) {
+			PRINTM(MERROR,
+			       "ERROR:AP info in roaming event buffer is NULL\n");
+			goto done;
+		}
+
+		woal_inform_bss_from_scan_result(priv, NULL, MOAL_NO_WAIT);
+#if CFG80211_VERSION_CODE >= KERNEL_VERSION(3, 0, 0)
+		cfg80211_roamed(priv->netdev, NULL, priv->cfg_bssid, NULL, 0,
+				pinfo->rsp_ie, pinfo->header.len, GFP_KERNEL);
+#else
+		cfg80211_roamed(priv->netdev, priv->cfg_bssid, NULL, 0,
+				pinfo->rsp_ie, pinfo->header.len, GFP_KERNEL);
+#endif
+#ifdef STA_CFG80211
+#if CFG80211_VERSION_CODE >= KERNEL_VERSION(3, 14, 0)
+		woal_roam_ap_info(priv, pmevent->event_buf, pmevent->event_len);
+#endif
+#endif
+		PRINTM(MMSG, "FW Roamed to bssid " MACSTR " successfully\n",
+		       MAC2STR(priv->cfg_bssid));
 		break;
 	default:
 		break;
@@ -2515,22 +2684,6 @@ moal_assert(IN t_void *pmoal_handle, IN t_u32 cond)
 }
 
 /**
- *  @brief This function indicate tcp ack tx
- *
- *  @param pmoal_handle     A pointer to moal_private structure
- *  @param pmbuf            Pointer to the mlan buffer structure
- *
- *  @return                 N/A
- */
-t_void
-moal_tcp_ack_tx_ind(IN t_void *pmoal_handle, IN pmlan_buffer pmbuf)
-{
-	moal_handle *phandle = (moal_handle *)pmoal_handle;
-	pmbuf->flags &= ~MLAN_BUF_FLAG_TCP_ACK;
-	woal_tcp_ack_tx_indication(phandle->priv[pmbuf->bss_index], pmbuf);
-}
-
-/**
  *  @brief This function save the histogram data
  *
  *  @param pmoal_handle     A pointer to moal_private structure
@@ -2538,6 +2691,7 @@ moal_tcp_ack_tx_ind(IN t_void *pmoal_handle, IN pmlan_buffer pmbuf)
  *  @param rx_rate          rx rate index
  *  @param snr              snr
  *  @param nflr             noise floor
+ *  @param antenna          antenna
  *
  *  @return                 N/A
  */
@@ -2558,6 +2712,7 @@ moal_hist_data_add(IN t_void *pmoal_handle, IN t_u32 bss_index, IN t_u8 rx_rate,
  *
  *  @param pmoal_handle     A pointer to moal_private structure
  *  @param bss_index        BSS index
+ *  @param peer_addr        peer address
  *  @param snr              snr
  *  @param nflr             noise floor
  *
@@ -2582,4 +2737,36 @@ moal_updata_peer_signal(IN t_void *pmoal_handle, IN t_u32 bss_index,
 		}
 		spin_unlock_irqrestore(&priv->tdls_lock, flags);
 	}
+}
+
+/**
+*  @brief This function records host time in nano seconds
+*
+*  @return                 64 bit value of host time in nano seconds
+*/
+s64
+get_host_time_ns(void)
+{
+	struct timespec ts;
+	getnstimeofday(&ts);
+	return timespec_to_ns(&ts);
+}
+
+/**
+ *  @brief Retrieves the current system time
+ *
+ *  @param time     Pointer for the seconds of system time
+ *
+ *  @return         MLAN_STATUS_SUCCESS
+ */
+mlan_status
+moal_get_host_time_ns(OUT t_u64 *time)
+{
+	struct timespec ts;
+	t_u64 hclk_val;
+
+	getnstimeofday(&ts);
+	hclk_val = (ts.tv_sec * 1000000000L) + ts.tv_nsec;
+	*time = hclk_val;
+	return MLAN_STATUS_SUCCESS;
 }

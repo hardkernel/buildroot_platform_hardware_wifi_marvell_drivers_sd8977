@@ -2,7 +2,7 @@
  *
  *  @brief This file defines pmk cache functions
  *
- * Copyright (C) 2014-2016, Marvell International Ltd.
+ * Copyright (C) 2014-2017, Marvell International Ltd.
  *
  * This software file (the "File") is distributed by Marvell International
  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
@@ -62,8 +62,9 @@ pmkCacheFindPSK(void *priv, UINT8 *pSsid, UINT8 ssidLen)
 		if (pPMKElement) {
 			pPMK = pPMKElement->PMK;
 		} else if ('\0' != PSKPassPhrase[0]) {
-			/* Generate a new PSK entry with the ** provided
-			   passphrase. */
+			/* Generate a new PSK entry with the
+			 ** provided passphrase.
+			 */
 			pmkCacheAddPSK((void *)priv, pSsid, ssidLen, NULL,
 				       PSKPassPhrase);
 			pPMKElement =
@@ -161,7 +162,7 @@ t_u16
 SupplicantSetPassphrase(void *priv, void *pPassphraseBuf)
 {
 	phostsa_private psapriv = (phostsa_private)priv;
-	hostsa_util_fns *util_fns = &psapriv->util_fns;
+	hostsa_util_fns *util_fns = NULL;
 	mlan_ds_passphrase *psk = (mlan_ds_passphrase *)pPassphraseBuf;
 	IEEEtypes_MacAddr_t *pBssid = NULL;
 	UINT8 *pPMK = NULL;
@@ -170,6 +171,10 @@ SupplicantSetPassphrase(void *priv, void *pPassphraseBuf)
 	UINT8 ssidLen = 0;
 	UINT16 retVal = 0;
 	t_u8 zero_mac[] = { 0, 0, 0, 0, 0, 0 };
+
+	if (!psapriv)
+		return retVal;
+	util_fns = &psapriv->util_fns;
 
 	if (memcmp(util_fns, (t_u8 *)&psk->bssid, zero_mac, sizeof(zero_mac)))
 		pBssid = (IEEEtypes_MacAddr_t *)&psk->bssid;
@@ -256,6 +261,9 @@ SupplicantClearPMK_internal(void *priv, void *pPassphraseBuf)
 void
 SupplicantClearPMK(void *priv, void *pPassphrase)
 {
+	if (!priv)
+		return;
+
 	if (!SupplicantClearPMK_internal(priv, pPassphrase)) {
 		/* Always disable the supplicant on a flush */
 		supplicantDisable(priv);
@@ -267,12 +275,16 @@ void
 SupplicantQueryPassphrase(void *priv, void *pPassphraseBuf)
 {
 	phostsa_private psapriv = (phostsa_private)priv;
-	hostsa_util_fns *util_fns = &psapriv->util_fns;
+	hostsa_util_fns *util_fns = NULL;
 	mlan_ds_passphrase *psk = (mlan_ds_passphrase *)pPassphraseBuf;
 	UINT8 *pPassphrase = NULL;
 	UINT8 *pSsid = NULL;
 	UINT8 ssidLen = 0;
 
+	if (!psapriv)
+		return;
+
+	util_fns = &psapriv->util_fns;
 	ssidLen = psk->ssid.ssid_len;
 	pSsid = psk->ssid.ssid;
 

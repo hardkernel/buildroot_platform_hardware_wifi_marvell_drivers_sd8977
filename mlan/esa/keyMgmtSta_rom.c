@@ -2,7 +2,7 @@
  *
  *  @brief This file defines key management function for sta
  *
- * Copyright (C) 2014-2016, Marvell International Ltd.
+ * Copyright (C) 2014-2017, Marvell International Ltd.
  *
  * This software file (the "File") is distributed by Marvell International
  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
@@ -139,7 +139,7 @@ keyMgmtFormatWpaRsnIe_internal(phostsa_private priv, RSNConfig_t *pRsnConfig,
 	IEEEtypes_RSNElement_t *pRsnIe = (IEEEtypes_RSNElement_t *)pos;
 
 	UINT32 ieSize = 0;
-#if 0				// !defined(REMOVE_PATCH_HOOKS)
+#if 0				//!defined(REMOVE_PATCH_HOOKS)
 	UINT16 ptr_val;
 
 	if (keyMgmtFormatWpaRsnIe_internal_hook(pRsnConfig,
@@ -324,7 +324,7 @@ install_wpa_none_keys_internal(phostsa_private priv,
 {
 	hostsa_util_fns *util_fns = &priv->util_fns;
 
-#if 0				// !defined(REMOVE_PATCH_HOOKS)
+#if 0				//!defined(REMOVE_PATCH_HOOKS)
 	if (install_wpa_none_keys_internal_hook(pKeyMgtData,
 						pPMK, type, unicast)) {
 		return;
@@ -367,7 +367,7 @@ keyMgmtGetKeySize_internal(RSNConfig_t *pRsnConfig, UINT8 isPairwise)
 	/* default to TKIP key size */
 	UINT16 retval = 32;
 
-#if 0				// !defined(REMOVE_PATCH_HOOKS)
+#if 0				//!defined(REMOVE_PATCH_HOOKS)
 	if (keyMgmtGetKeySize_internal_hook(pRsnConfig, isPairwise, &retval)) {
 		return retval;
 	}
@@ -404,13 +404,7 @@ supplicantGenerateSha1Pmkid(phostsa_private priv, UINT8 *pPMK,
 	pText[1] = pBssid;
 	pText[2] = pSta;
 
-	Mrvl_hmac_sha1((void *)priv, (UINT8 **)pText, len, 3, pPMK, 32,	/* PMK
-									   size
-									   is
-									   always
-									   32
-									   bytes
-									 */
+	Mrvl_hmac_sha1((void *)priv, (UINT8 **)pText, len, 3, pPMK, 32,	/* PMK size is always 32 bytes */
 		       pPMKID, 16);
 }
 
@@ -486,7 +480,7 @@ FillKeyMaterialStruct_internal(phostsa_private priv,
 	hostsa_util_fns *util_fns = &priv->util_fns;
 	UINT8 keyInfo;
 
-#if 0				// !defined(REMOVE_PATCH_HOOKS)
+#if 0				//!defined(REMOVE_PATCH_HOOKS)
 	if (FillKeyMaterialStruct_internal_hook(pKeyMgtData,
 						key_len, isPairwise, pKey)) {
 		return;
@@ -537,7 +531,9 @@ FillKeyMaterialStruct_internal(phostsa_private priv,
 		memcpy(util_fns, (UINT8 *)(pKeyMgtData->keyEncypt.WEP.key),
 		       pKey->Key, key_len);
 	} else {
-		/* Key length does not match ** don't send down anything */
+		/* Key length does not match
+		 ** don't send down anything
+		 */
 		return;
 	}
 
@@ -583,7 +579,7 @@ parseKeyKDE_DataType(phostsa_private priv, UINT8 *pData,
 
 	IEEEtypes_InfoElementHdr_t *pIe;
 	KDE_t *pKde;
-#if 0				// !defined(REMOVE_PATCH_HOOKS)
+#if 0				//!defined(REMOVE_PATCH_HOOKS)
 	UINT32 ptr_val;
 
 	if (parseKeyKDE_DataType_hook(pData, dataLen, KDEDataType, &ptr_val)) {
@@ -604,8 +600,9 @@ parseKeyKDE_DataType(phostsa_private priv, UINT8 *pData,
 			if ((pKde != NULL) && (pKde->dataType == KDEDataType)) {
 				return pKde;
 			} else if (pIe->Len == 0) {
-				/* the rest is padding, so adjust the length **
-				   to stop the processing loop */
+				/* the rest is padding, so adjust the length
+				 ** to stop the processing loop
+				 */
 				dataLen = sizeof(IEEEtypes_InfoElementHdr_t);
 			}
 		}
@@ -624,7 +621,7 @@ parseKeyDataGTK(phostsa_private priv, UINT8 *pKey, UINT16 len,
 	hostsa_util_fns *util_fns = &priv->util_fns;
 	GTK_KDE_t *pGtk;
 	KDE_t *pKde;
-#if 0				// !defined(REMOVE_PATCH_HOOKS)
+#if 0				//!defined(REMOVE_PATCH_HOOKS)
 	UINT32 ptr_val;
 
 	if (parseKeyDataGTK_hook(pKey, len, pGRKey, &ptr_val)) {
@@ -682,8 +679,9 @@ KeyMgmtSta_ApplyKEK(phostsa_private priv, EAPOL_KeyMsg_t *pKeyMsg,
 			       (UINT8 *)pKeyMsg->key_data,
 			       NULL, (UINT8 *)pKeyMsg->key_data);
 
-		/* AES key wrap has 8 extra bytes that come out ** due to the
-		   default IV */
+		/* AES key wrap has 8 extra bytes that come out
+		 ** due to the default IV
+		 */
 		pKeyMsg->key_material_len -= 8;
 		break;
 
@@ -716,7 +714,7 @@ KeyMgmtSta_IsRxEAPOLValid(phostsa_private priv,
 {
 	hostsa_util_fns *util_fns = &priv->util_fns;
 
-#if 0				// !defined(REMOVE_PATCH_HOOKS)
+#if 0				//!defined(REMOVE_PATCH_HOOKS)
 	BOOLEAN ptr_val;
 
 	if (KeyMgmtSta_IsRxEAPOLValid_hook(pKeyMgmtInfoSta, pKeyMsg, &ptr_val)) {
@@ -739,8 +737,9 @@ KeyMgmtSta_IsRxEAPOLValid(phostsa_private priv,
 	/* Check if we have to verify MIC */
 
 	if (pKeyMsg->key_info.KeyMIC) {
-		/* We have to verify MIC, if keyType is 1 it's the 3rd message
-		   in 4-way handshake, in that case verify ANonce. */
+		/* We have to verify MIC, if keyType is 1 it's the 3rd message in
+		   4-way handshake, in that case verify ANonce.
+		 */
 
 		if ((pKeyMsg->key_info.KeyType == 1) &&
 		    memcmp(util_fns, (UINT8 *)&pKeyMsg->key_nonce,
@@ -795,7 +794,7 @@ KeyMgmtSta_PrepareEAPOLFrame(phostsa_private priv, EAPOL_KeyMsg_Tx_t *pTxEapol,
 	pTxEapol->keyMsg.key_info.KeyDescriptorVersion
 		= pRxEapol->key_info.KeyDescriptorVersion;
 
-	// Only for 4-w handshake message 2.
+	// Only for  4-w handshake message 2.
 	if (pSNonce) {
 		memcpy(util_fns, (UINT8 *)pTxEapol->keyMsg.key_nonce, pSNonce,
 		       NONCE_SIZE);
@@ -1013,13 +1012,15 @@ ProcessRxEAPOL_PwkMsg3(phostsa_private priv, mlan_buffer *pmbuf,
 
 	/* look for group key once the pairwise has been plumbed */
 	if (pKeyMsg->key_info.EncryptedKeyData) {
-		/* I think the timer stop should be moved later on in case
-		   ramHook_Process_CCX_MFP_11r returns FALSE */
+		/* I think the timer stop should be moved later on
+		   in case ramHook_Process_CCX_MFP_11r returns
+		   FALSE
+		 */
 
 //        microTimerStop(pKeyMgmtInfoSta->rsnTimer);
 		util_fns->moal_stop_timer(util_fns->pmoal_handle,
 					  pKeyMgmtInfoSta->rsnTimer);
-		// pKeyMgmtInfoSta->rsnTimer = 0;
+		//pKeyMgmtInfoSta->rsnTimer = 0;
 
 		KeyMgmtSta_ApplyKEK(priv, pKeyMsg,
 				    &pKeyMgmtInfoSta->GRKey,
@@ -1059,7 +1060,7 @@ ProcessRxEAPOL_GrpMsg1(phostsa_private priv, mlan_buffer *pmbuf,
 //    microTimerStop(pKeyMgmtInfoSta->rsnTimer);
 	util_fns->moal_stop_timer(util_fns->pmoal_handle,
 				  pKeyMgmtInfoSta->rsnTimer);
-	// pKeyMgmtInfoSta->rsnTimer = 0;
+	//pKeyMgmtInfoSta->rsnTimer = 0;
 
 	/* Decrypt the group key */
 	if (pKeyMsg->desc_type == 2) {
@@ -1105,11 +1106,11 @@ MicErrTimerExp_Sta(t_void *context)
 	keyMgmtInfoSta_t *pKeyMgmtInfo = &psapriv->suppData->keyMgmtInfoSta;
 
 	if (pKeyMgmtInfo) {
-		// if (pKeyMgmtInfo->micTimer == timerId)
+		//if (pKeyMgmtInfo->micTimer == timerId)
 		{
 			if (pKeyMgmtInfo->sta_MIC_Error.status
 			    == SECOND_MIC_FAIL_IN_60_SEC) {
-				// ramHook_keyMgmtSendTkipQuietOver(data);
+				//ramHook_keyMgmtSendTkipQuietOver(data);
 			}
 
 			pKeyMgmtInfo->sta_MIC_Error.status = NO_MIC_FAILURE;
@@ -1127,12 +1128,12 @@ DeauthDelayTimerExp_Sta(t_void *context)
 	keyMgmtInfoSta_t *pKeyMgmtInfoSta = &psapriv->suppData->keyMgmtInfoSta;
 
 	if (pKeyMgmtInfoSta) {
-		// if (pKeyMgmtInfoSta->deauthDelayTimer == timerId)
+		//if (pKeyMgmtInfoSta->deauthDelayTimer == timerId)
 		{
 			if (pKeyMgmtInfoSta->sta_MIC_Error.status
 			    == SECOND_MIC_FAIL_IN_60_SEC) {
-				// ramHook_keyMgmtSendDeauth(psapriv,
-				// IEEEtypes_REASON_MIC_FAILURE);
+				//ramHook_keyMgmtSendDeauth(psapriv,
+				//                          IEEEtypes_REASON_MIC_FAILURE);
 				keyMgmtSendDeauth2Peer(psapriv,
 						       IEEEtypes_REASON_MIC_FAILURE);
 			}
@@ -1152,43 +1153,43 @@ keyMgmtStaRsnSecuredTimeoutHandler(t_void *context)
 	keyMgmtInfoSta_t *pKeyMgmtInfoSta = &psapriv->suppData->keyMgmtInfoSta;
 
 	if (pKeyMgmtInfoSta) {
-		// if (pKeyMgmtInfoSta->rsnTimer == timerId)
+		//if (pKeyMgmtInfoSta->rsnTimer == timerId)
 		{
 			if (pKeyMgmtInfoSta->RSNSecured == FALSE) {
-				/* Clear timer before calling the timeout so
-				   the rsnTimer ** can't be cancelled during
-				   the sme state clearing. ** (caused timer
-				   re-entrancy failure). */
-				// pKeyMgmtInfoSta->rsnTimer = 0;
-				// ramHook_keyMgmtSendDeauth(
-				// psapriv,
-				// IEEEtypes_REASON_4WAY_HANDSHK_TIMEOUT);
+				/* Clear timer before calling the timeout so the rsnTimer
+				 **  can't be cancelled during the sme state clearing.
+				 **  (caused timer re-entrancy failure).
+				 */
+				//pKeyMgmtInfoSta->rsnTimer = 0;
+				//ramHook_keyMgmtSendDeauth(
+				//    psapriv,
+				//    IEEEtypes_REASON_4WAY_HANDSHK_TIMEOUT);
 				keyMgmtSendDeauth2Peer(psapriv,
 						       IEEEtypes_REASON_4WAY_HANDSHK_TIMEOUT);
 			}
 		}
-		// pKeyMgmtInfoSta->rsnTimer = 0;
+		//pKeyMgmtInfoSta->rsnTimer = 0;
 	}
 }
 
 void
 keyMgmtSta_StartSession_internal(phostsa_private priv,
 				 keyMgmtInfoSta_t *pKeyMgmtInfoSta,
-				 // MicroTimerCallback_t callback,
+				 //MicroTimerCallback_t callback,
 				 UINT32 expiry, UINT8 flags)
 {
 	hostsa_util_fns *util_fns = &priv->util_fns;
 
 	if (!pKeyMgmtInfoSta->sta_MIC_Error.disableStaAsso) {
-		// microTimerStop(pKeyMgmtInfoSta->rsnTimer);
+		//microTimerStop(pKeyMgmtInfoSta->rsnTimer);
 		util_fns->moal_stop_timer(util_fns->pmoal_handle,
 					  pKeyMgmtInfoSta->rsnTimer);
-		// pKeyMgmtInfoSta->rsnTimer = 0;
-		// microTimerStart(callback,
-		// (UINT32)pKeyMgmtInfoSta,
-		// expiry,
-		// &pKeyMgmtInfoSta->rsnTimer,
-		// flags);
+		//pKeyMgmtInfoSta->rsnTimer = 0;
+		//microTimerStart(callback,
+		//                 (UINT32)pKeyMgmtInfoSta,
+		//                 expiry,
+		//                 &pKeyMgmtInfoSta->rsnTimer,
+		//                 flags);
 		util_fns->moal_start_timer(util_fns->pmoal_handle,
 					   pKeyMgmtInfoSta->rsnTimer, MFALSE,
 					   expiry);
@@ -1275,5 +1276,5 @@ KeyMgmtSta_InitSession(phostsa_private priv, keyMgmtInfoSta_t *pKeyMgmtInfoSta)
 	util_fns->moal_stop_timer(util_fns->pmoal_handle,
 				  pKeyMgmtInfoSta->rsnTimer);
 
-	// pKeyMgmtInfoSta->rsnTimer = 0;
+	//pKeyMgmtInfoSta->rsnTimer = 0;
 }

@@ -2,7 +2,7 @@
   *
   * @brief This file contains the functions for CFG80211.
   *
-  * Copyright (C) 2011-2016, Marvell International Ltd.
+  * Copyright (C) 2011-2017, Marvell International Ltd.
   *
   * This software file (the "File") is distributed by Marvell International
   * Ltd. under the terms of the GNU General Public License Version 2, June 1991
@@ -86,7 +86,6 @@ static struct ieee80211_channel cfg80211_channels_5ghz[] = {
 	{.center_freq = 5660,.hw_value = 132,.max_power = 20},
 	{.center_freq = 5680,.hw_value = 136,.max_power = 20},
 	{.center_freq = 5700,.hw_value = 140,.max_power = 20},
-	{.center_freq = 5720,.hw_value = 144,.max_power = 20},
 	{.center_freq = 5745,.hw_value = 149,.max_power = 20},
 	{.center_freq = 5765,.hw_value = 153,.max_power = 20},
 	{.center_freq = 5785,.hw_value = 157,.max_power = 20},
@@ -124,8 +123,6 @@ extern const struct net_device_ops woal_netdev_ops;
 #endif
 #endif
 
-/** gtk rekey offload mode */
-extern int gtk_rekey_offload;
 /********************************************************
 				Local Functions
 ********************************************************/
@@ -133,6 +130,7 @@ extern int gtk_rekey_offload;
 /********************************************************
 				Global Functions
 ********************************************************/
+
 /**
  * @brief Get the private structure from wiphy
  *
@@ -179,7 +177,7 @@ woal_get_active_intf_freq(moal_private *priv)
 				return ieee80211_channel_to_frequency(handle->
 								      priv[i]->
 								      channel
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 39) || defined(COMPAT_WIRELESS)
+#if CFG80211_VERSION_CODE >= KERNEL_VERSION(2, 6, 39)
 								      ,
 								      (handle->
 								       priv[i]->
@@ -201,7 +199,7 @@ woal_get_active_intf_freq(moal_private *priv)
 				return ieee80211_channel_to_frequency(handle->
 								      priv[i]->
 								      channel
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 39) || defined(COMPAT_WIRELESS)
+#if CFG80211_VERSION_CODE >= KERNEL_VERSION(2, 6, 39)
 								      ,
 								      (handle->
 								       priv[i]->
@@ -426,8 +424,8 @@ woal_cfg80211_set_wep_keys(moal_private *priv, const t_u8 *key, int key_len,
 		ret = woal_cfg80211_set_key(priv, 0, cipher, key, key_len, NULL,
 					    0, index, NULL, 0, wait_option);
 	} else {
-		/* No key provided so it is enable key. We want to just set the
-		   transmit key index */
+		/* No key provided so it is enable key. We
+		 * want to just set the transmit key index */
 		woal_cfg80211_set_key(priv, 1, cipher, key, key_len, NULL, 0,
 				      index, NULL, 0, wait_option);
 	}
@@ -533,7 +531,7 @@ done:
 #endif
 
 #if defined(WIFI_DIRECT_SUPPORT)
-#if LINUX_VERSION_CODE >= WIFI_DIRECT_KERNEL_VERSION
+#if CFG80211_VERSION_CODE >= WIFI_DIRECT_KERNEL_VERSION
 /**
  *  @brief This function display P2P public action frame type
  *
@@ -685,7 +683,7 @@ woal_cfg80211_init_p2p_client(moal_private *priv)
 		goto done;
 	}
 
-	/* second, init wifi direct client */
+	/* second, init wifi direct client  */
 	wifi_direct_mode = WIFI_DIRECT_MODE_CLIENT;
 	if (MLAN_STATUS_SUCCESS !=
 	    woal_wifi_direct_mode_cfg(priv, MLAN_ACT_SET, &wifi_direct_mode)) {
@@ -737,7 +735,7 @@ woal_cfg80211_init_p2p_go(moal_private *priv)
 		goto done;
 	}
 
-	/* second, init wifi direct to GO mode */
+	/* second, init wifi direct to GO mode  */
 	wifi_direct_mode = WIFI_DIRECT_MODE_GO;
 	if (MLAN_STATUS_SUCCESS !=
 	    woal_wifi_direct_mode_cfg(priv, MLAN_ACT_SET, &wifi_direct_mode)) {
@@ -762,7 +760,7 @@ woal_cfg80211_init_p2p_go(moal_private *priv)
 	}
 /* NoA:-- Interval = 100TUs and Duration= 50TUs, count=255*/
 #define DEF_NOA_COUNT       255
-	if (priv->phandle->noa_duration && priv->phandle->card_info->go_noa) {
+	if (priv->phandle->noa_duration) {
 		memset(&p2p_config, 0, sizeof(p2p_config));
 		p2p_config.noa_enable = MTRUE;
 		p2p_config.index = 0;
@@ -842,7 +840,7 @@ woal_cfg80211_deinit_p2p(moal_private *priv)
 		}
 		if (priv->phandle->cookie) {
 			cfg80211_remain_on_channel_expired(
-#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 6, 0)
+#if CFG80211_VERSION_CODE < KERNEL_VERSION(3, 6, 0)
 								  remain_priv->
 								  netdev,
 #else
@@ -854,7 +852,7 @@ woal_cfg80211_deinit_p2p(moal_private *priv)
 								  cookie,
 								  &priv->
 								  phandle->chan,
-#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 8, 0)
+#if CFG80211_VERSION_CODE < KERNEL_VERSION(3, 8, 0)
 								  priv->
 								  phandle->
 								  channel_type,
@@ -948,7 +946,7 @@ woal_cfg80211_change_virtual_intf(struct wiphy *wiphy,
 
 	PRINTM(MIOCTL, "%s: change virturl intf=%d\n", dev->name, type);
 #if defined(WIFI_DIRECT_SUPPORT)
-#if LINUX_VERSION_CODE >= WIFI_DIRECT_KERNEL_VERSION
+#if CFG80211_VERSION_CODE >= WIFI_DIRECT_KERNEL_VERSION
 	/** cancel previous remain on channel to avoid firmware hang */
 	if (priv->phandle->remain_on_channel) {
 		t_u8 channel_status;
@@ -972,7 +970,7 @@ woal_cfg80211_change_virtual_intf(struct wiphy *wiphy,
 		}
 		if (priv->phandle->cookie) {
 			cfg80211_remain_on_channel_expired(
-#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 6, 0)
+#if CFG80211_VERSION_CODE < KERNEL_VERSION(3, 6, 0)
 								  remain_priv->
 								  netdev,
 #else
@@ -984,7 +982,7 @@ woal_cfg80211_change_virtual_intf(struct wiphy *wiphy,
 								  cookie,
 								  &priv->
 								  phandle->chan,
-#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 8, 0)
+#if CFG80211_VERSION_CODE < KERNEL_VERSION(3, 8, 0)
 								  priv->
 								  phandle->
 								  channel_type,
@@ -1016,7 +1014,7 @@ woal_cfg80211_change_virtual_intf(struct wiphy *wiphy,
 		break;
 	case NL80211_IFTYPE_STATION:
 #if defined(WIFI_DIRECT_SUPPORT)
-#if LINUX_VERSION_CODE >= WIFI_DIRECT_KERNEL_VERSION
+#if CFG80211_VERSION_CODE >= WIFI_DIRECT_KERNEL_VERSION
 		if (priv->bss_type == MLAN_BSS_TYPE_WIFIDIRECT
 		    && (priv->wdev->iftype == NL80211_IFTYPE_AP
 			|| priv->wdev->iftype == NL80211_IFTYPE_P2P_GO
@@ -1025,12 +1023,12 @@ woal_cfg80211_change_virtual_intf(struct wiphy *wiphy,
 				woal_cancel_timer(&priv->phandle->go_timer);
 				priv->phandle->is_go_timer_set = MFALSE;
 			}
-			/* if we support wifi direct && priv->bss_type ==
-			   wifi_direct, and currently the interface type is AP
-			   or GO or client, that means wpa_supplicant deinit()
-			   wifi direct interface, so we should deinit bss_role
-			   and wifi direct mode, for other bss_type, we should
-			   not update bss_role and wifi direct mode */
+			/* if we support wifi direct && priv->bss_type == wifi_direct,
+			 * and currently the interface type is AP or GO or client,
+			 * that means wpa_supplicant deinit() wifi direct interface,
+			 * so we should deinit bss_role and wifi direct mode,
+			 * for other bss_type, we should not update bss_role
+			 * and wifi direct mode */
 
 			if (MLAN_STATUS_SUCCESS !=
 			    woal_cfg80211_deinit_p2p(priv)) {
@@ -1054,7 +1052,7 @@ woal_cfg80211_change_virtual_intf(struct wiphy *wiphy,
 		PRINTM(MINFO, "Setting interface type to managed\n");
 		break;
 #if defined(WIFI_DIRECT_SUPPORT)
-#if LINUX_VERSION_CODE >= WIFI_DIRECT_KERNEL_VERSION
+#if CFG80211_VERSION_CODE >= WIFI_DIRECT_KERNEL_VERSION
 	case NL80211_IFTYPE_P2P_CLIENT:
 		if (priv->phandle->is_go_timer_set) {
 			woal_cancel_timer(&priv->phandle->go_timer);
@@ -1075,7 +1073,7 @@ woal_cfg80211_change_virtual_intf(struct wiphy *wiphy,
 #endif /* WIFI_DIRECT_SUPPORT && V14_FEATURE */
 	case NL80211_IFTYPE_AP:
 #if defined(WIFI_DIRECT_SUPPORT)
-#if LINUX_VERSION_CODE >= WIFI_DIRECT_KERNEL_VERSION
+#if CFG80211_VERSION_CODE >= WIFI_DIRECT_KERNEL_VERSION
 	case NL80211_IFTYPE_P2P_GO:
 		if (priv->bss_type == MLAN_BSS_TYPE_WIFIDIRECT) {
 			if (MLAN_STATUS_SUCCESS !=
@@ -1093,12 +1091,18 @@ woal_cfg80211_change_virtual_intf(struct wiphy *wiphy,
 #endif
 #if defined(STA_SUPPORT) && defined(UAP_SUPPORT)
 		if (priv->bss_type == MLAN_BSS_TYPE_STA) {
+#ifdef STA_CFG80211
+	    /** cancel pending scan */
+			woal_cancel_scan(priv, MOAL_IOCTL_WAIT);
+
+#endif
 			if (priv->probereq_index !=
 			    MLAN_CUSTOM_IE_AUTO_IDX_MASK)
 				woal_cfg80211_mgmt_frame_ie(priv, NULL, 0, NULL,
 							    0, NULL, 0, NULL, 0,
 							    MGMT_MASK_PROBE_REQ,
 							    MOAL_IOCTL_WAIT);
+
 			bss_role = MLAN_BSS_ROLE_UAP;
 			woal_cfg80211_bss_role_cfg(priv, MLAN_ACT_SET,
 						   &bss_role);
@@ -1177,8 +1181,8 @@ woal_cfg80211_set_wiphy_params(struct wiphy *wiphy, u32 changed)
 #ifdef UAP_CFG80211
 #ifdef UAP_SUPPORT
 	if (GET_BSS_ROLE(priv) == MLAN_BSS_ROLE_UAP) {
-		/* Initialize the invalid values so that the correct values
-		   below are downloaded to firmware */
+		/* Initialize the invalid values so that the correct
+		 * values below are downloaded to firmware */
 		woal_set_sys_config_invalid_data(&sys_cfg);
 		sys_cfg.frag_threshold = frag_thr;
 		sys_cfg.rts_threshold = rts_thr;
@@ -1227,7 +1231,7 @@ fail:
 	return -EFAULT;
 }
 
-#if LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 36) || defined(COMPAT_WIRELESS)
+#if CFG80211_VERSION_CODE > KERNEL_VERSION(2, 6, 36)
 /**
  * @brief Request the driver to add a key
  *
@@ -1256,7 +1260,7 @@ fail:
 int
 woal_cfg80211_add_key(struct wiphy *wiphy, struct net_device *netdev,
 		      t_u8 key_index,
-#if LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 36) || defined(COMPAT_WIRELESS)
+#if CFG80211_VERSION_CODE > KERNEL_VERSION(2, 6, 36)
 		      bool pairwise,
 #endif
 		      const t_u8 *mac_addr, struct key_params *params)
@@ -1282,7 +1286,7 @@ woal_cfg80211_add_key(struct wiphy *wiphy, struct net_device *netdev,
 	return 0;
 }
 
-#if LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 36) || defined(COMPAT_WIRELESS)
+#if CFG80211_VERSION_CODE > KERNEL_VERSION(2, 6, 36)
 /**
  * @brief Request the driver to delete a key
  *
@@ -1309,7 +1313,7 @@ woal_cfg80211_add_key(struct wiphy *wiphy, struct net_device *netdev,
 int
 woal_cfg80211_del_key(struct wiphy *wiphy, struct net_device *netdev,
 		      t_u8 key_index,
-#if LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 36) || defined(COMPAT_WIRELESS)
+#if CFG80211_VERSION_CODE > KERNEL_VERSION(2, 6, 36)
 		      bool pairwise,
 #endif
 		      const t_u8 *mac_addr)
@@ -1338,7 +1342,7 @@ woal_cfg80211_del_key(struct wiphy *wiphy, struct net_device *netdev,
 	return 0;
 }
 
-#if LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 37) || defined(COMPAT_WIRELESS)
+#if CFG80211_VERSION_CODE > KERNEL_VERSION(2, 6, 37)
 /**
  * @brief Request to enable WEP key to driver
  *
@@ -1364,7 +1368,7 @@ woal_cfg80211_del_key(struct wiphy *wiphy, struct net_device *netdev,
 int
 woal_cfg80211_set_default_key(struct wiphy *wiphy,
 			      struct net_device *netdev, t_u8 key_index
-#if LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 37) || defined(COMPAT_WIRELESS)
+#if CFG80211_VERSION_CODE > KERNEL_VERSION(2, 6, 37)
 			      , bool ucast, bool mcast
 #endif
 	)
@@ -1390,7 +1394,7 @@ woal_cfg80211_set_default_key(struct wiphy *wiphy,
 	return ret;
 }
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30) || defined(COMPAT_WIRELESS)
+#if CFG80211_VERSION_CODE >= KERNEL_VERSION(2, 6, 30)
 int
 woal_cfg80211_set_default_mgmt_key(struct wiphy *wiphy,
 				   struct net_device *netdev, t_u8 key_index)
@@ -1398,101 +1402,6 @@ woal_cfg80211_set_default_mgmt_key(struct wiphy *wiphy,
 	PRINTM(MINFO, "set default mgmt key, key index=%d\n", key_index);
 
 	return 0;
-}
-#endif
-
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 1, 0)
-/**
- *  @brief  Set GTK rekey data to driver
- *
- *  @param priv         A pointer to moal_private structure
- *  @param gtk_rekey     A pointer to mlan_ds_misc_gtk_rekey_data structure
- *
- *  @return             0 --success, otherwise fail
- */
-mlan_status
-woal_set_rekey_data(moal_private *priv, mlan_ds_misc_gtk_rekey_data * gtk_rekey,
-		    t_u8 action)
-{
-	mlan_ioctl_req *req;
-	mlan_ds_misc_cfg *misc_cfg;
-	int ret = 0;
-	mlan_status status;
-
-	ENTER();
-
-	req = woal_alloc_mlan_ioctl_req(sizeof(mlan_ds_misc_cfg));
-
-	if (NULL == req) {
-		ret = -ENOMEM;
-	} else {
-		misc_cfg = (mlan_ds_misc_cfg *)req->pbuf;
-		misc_cfg->sub_command = MLAN_OID_MISC_GTK_REKEY_OFFLOAD;
-		req->req_id = MLAN_IOCTL_MISC_CFG;
-
-		req->action = action;
-		if (action == MLAN_ACT_SET)
-			memcpy(&misc_cfg->param.gtk_rekey, gtk_rekey,
-			       sizeof(mlan_ds_misc_gtk_rekey_data));
-
-		status = woal_request_ioctl(priv, req, MOAL_IOCTL_WAIT);
-		if (MLAN_STATUS_SUCCESS != status)
-			ret = -EFAULT;
-		if (status != MLAN_STATUS_PENDING)
-			kfree(req);
-	}
-
-	LEAVE();
-	return ret;
-}
-
-/**
- * @brief Give the data necessary for GTK rekeying to the driver
- *
- * @param wiphy         A pointer to wiphy structure
- * @param dev           A pointer to net_device structure
- * @param data        A pointer to cfg80211_gtk_rekey_data structure
- *
- * @return              0 -- success, otherwise fail
- */
-int
-woal_cfg80211_set_rekey_data(struct wiphy *wiphy, struct net_device *dev,
-			     struct cfg80211_gtk_rekey_data *data)
-{
-	int ret = 0;
-	moal_private *priv = (moal_private *)woal_get_netdev_priv(dev);
-	mlan_ds_misc_gtk_rekey_data rekey;
-	mlan_fw_info fw_info;
-
-	ENTER();
-
-	woal_request_get_fw_info(priv, MOAL_CMD_WAIT, &fw_info);
-	if (!fw_info.fw_supplicant_support) {
-		LEAVE();
-		return -1;
-	}
-
-	memcpy(rekey.kek, data->kek, MLAN_KEK_LEN);
-	memcpy(rekey.kck, data->kck, MLAN_KCK_LEN);
-	memcpy(rekey.replay_ctr, data->replay_ctr, MLAN_REPLAY_CTR_LEN);
-
-	if (gtk_rekey_offload != GTK_REKEY_OFFLOAD_ENABLE) {
-		if (gtk_rekey_offload == GTK_REKEY_OFFLOAD_SUSPEND) {
-			priv->gtk_data_ready = MTRUE;
-			memcpy(&priv->gtk_rekey_data, &rekey,
-			       sizeof(mlan_ds_misc_gtk_rekey_data));
-		}
-		LEAVE();
-		return ret;
-	}
-
-	if (MLAN_STATUS_SUCCESS !=
-	    woal_set_rekey_data(priv, &rekey, MLAN_ACT_SET)) {
-		ret = -EFAULT;
-	}
-
-	LEAVE();
-	return ret;
 }
 #endif
 
@@ -1675,8 +1584,8 @@ woal_cfg80211_flush_pmksa(struct wiphy *wiphy, struct net_device *dev)
 }
 #endif
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 5, 0)
-#if LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 34) || defined(COMPAT_WIRELESS)
+#if CFG80211_VERSION_CODE < KERNEL_VERSION(3, 5, 0)
+#if CFG80211_VERSION_CODE > KERNEL_VERSION(2, 6, 34)
 /**
  * @brief Request the driver to change the channel
  *
@@ -1700,7 +1609,7 @@ woal_cfg80211_flush_pmksa(struct wiphy *wiphy, struct net_device *dev)
 #endif
 int
 woal_cfg80211_set_channel(struct wiphy *wiphy,
-#if LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 34) || defined(COMPAT_WIRELESS)
+#if CFG80211_VERSION_CODE > KERNEL_VERSION(2, 6, 34)
 			  struct net_device *dev,
 #endif
 			  struct ieee80211_channel *chan,
@@ -1711,8 +1620,8 @@ woal_cfg80211_set_channel(struct wiphy *wiphy,
 
 	ENTER();
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 5, 0)
-#if LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 34) || defined(COMPAT_WIRELESS)
+#if CFG80211_VERSION_CODE < KERNEL_VERSION(3, 5, 0)
+#if CFG80211_VERSION_CODE > KERNEL_VERSION(2, 6, 34)
 	if (dev)
 		priv = woal_get_netdev_priv(dev);
 #endif
@@ -1748,7 +1657,7 @@ woal_cfg80211_set_channel(struct wiphy *wiphy,
 }
 #endif
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 12, 0)
+#if CFG80211_VERSION_CODE >= KERNEL_VERSION(3, 12, 0)
 static bool
 woal_is_pattern_supported(struct cfg80211_pkt_pattern *pat, t_u8 *byte_seq,
 			  t_u8 max_byte_seq)
@@ -2022,24 +1931,12 @@ woal_cfg80211_set_bitrate_mask(struct wiphy *wiphy,
 	else
 		rate_cfg->bitmap_rates[1] = mask->control[band].legacy;
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 4, 0)
+#if CFG80211_VERSION_CODE >= KERNEL_VERSION(3, 4, 0)
 	/* Fill MCS rates */
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 14, 0)
+#if CFG80211_VERSION_CODE >= KERNEL_VERSION(3, 14, 0)
 	rate_cfg->bitmap_rates[2] = mask->control[band].ht_mcs[0];
 #else
 	rate_cfg->bitmap_rates[2] = mask->control[band].mcs[0];
-#endif
-#if defined(SD_8XXX)
-	if (priv->phandle->card_type ==
-#if defined(SD_8XXX)
-	    CARD_TYPE_SD8797
-#endif
-		)
-#endif
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 14, 0)
-		rate_cfg->bitmap_rates[2] |= mask->control[band].ht_mcs[1] << 8;
-#else
-		rate_cfg->bitmap_rates[2] |= mask->control[band].mcs[1] << 8;
 #endif
 #endif
 
@@ -2056,7 +1953,7 @@ done:
 	return ret;
 }
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 38) || defined(COMPAT_WIRELESS)
+#if CFG80211_VERSION_CODE >= KERNEL_VERSION(2, 6, 38)
 /**
  * @brief Request the driver to get antenna configuration
  *
@@ -2106,13 +2003,8 @@ woal_cfg80211_get_antenna(struct wiphy *wiphy, u32 *tx_ant, u32 *rx_ant)
 		goto done;
 	}
 
-	if (handle->feature_control & FEATURE_CTRL_STREAM_2X2) {
-		*tx_ant = radio->param.ant_cfg.tx_antenna;
-		*rx_ant = radio->param.ant_cfg.rx_antenna;
-	} else {
-		*tx_ant = radio->param.ant_cfg_1x1.antenna;
-		*rx_ant = radio->param.ant_cfg_1x1.antenna;
-	}
+	*tx_ant = radio->param.ant_cfg_1x1.antenna;
+	*rx_ant = radio->param.ant_cfg_1x1.antenna;
 
 done:
 	if (status != MLAN_STATUS_PENDING)
@@ -2166,12 +2058,7 @@ woal_cfg80211_set_antenna(struct wiphy *wiphy, u32 tx_ant, u32 rx_ant)
 	radio->sub_command = MLAN_OID_ANT_CFG;
 	req->req_id = MLAN_IOCTL_RADIO_CFG;
 	req->action = MLAN_ACT_SET;
-	if (handle->feature_control & FEATURE_CTRL_STREAM_2X2) {
-		radio->param.ant_cfg.tx_antenna = tx_ant;
-		radio->param.ant_cfg.rx_antenna = rx_ant;
-	} else {
-		radio->param.ant_cfg_1x1.antenna = tx_ant;
-	}
+	radio->param.ant_cfg_1x1.antenna = tx_ant;
 
 	status = woal_request_ioctl(priv, req, MOAL_IOCTL_WAIT);
 	if (MLAN_STATUS_SUCCESS != status) {
@@ -2190,7 +2077,7 @@ done:
 }
 #endif
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 6, 0)
+#if CFG80211_VERSION_CODE < KERNEL_VERSION(3, 6, 0)
 /**
  * @brief register/unregister mgmt frame forwarding
  *
@@ -2222,7 +2109,7 @@ woal_cfg80211_mgmt_frame_register(struct wiphy *wiphy,
 				  bool reg)
 #endif
 {
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 6, 0)
+#if CFG80211_VERSION_CODE >= KERNEL_VERSION(3, 6, 0)
 	struct net_device *dev = wdev->netdev;
 #endif
 	moal_private *priv = (moal_private *)woal_get_netdev_priv(dev);
@@ -2246,9 +2133,9 @@ woal_cfg80211_mgmt_frame_register(struct wiphy *wiphy,
 	if (mgmt_subtype_mask != last_mgmt_subtype_mask) {
 
 		last_mgmt_subtype_mask = mgmt_subtype_mask;
-		/* Notify driver that a mgmt frame type was registered. * Note
-		   that this callback may not sleep, and cannot run *
-		   concurrently with itself. */
+		/* Notify driver that a mgmt frame type was registered.
+		 * Note that this callback may not sleep, and cannot run
+		 * concurrently with itself. */
 		status = woal_reg_rx_mgmt_ind(priv, MLAN_ACT_SET,
 					      &mgmt_subtype_mask, MOAL_NO_WAIT);
 		priv->mgmt_subtype_mask = last_mgmt_subtype_mask;
@@ -2257,11 +2144,11 @@ woal_cfg80211_mgmt_frame_register(struct wiphy *wiphy,
 	LEAVE();
 }
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 2, 0) || defined(COMPAT_WIRELESS)
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 3, 0)
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 6, 0)
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 8, 0)
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 14, 0)
+#if CFG80211_VERSION_CODE >= KERNEL_VERSION(3, 2, 0)
+#if CFG80211_VERSION_CODE >= KERNEL_VERSION(3, 3, 0)
+#if CFG80211_VERSION_CODE >= KERNEL_VERSION(3, 6, 0)
+#if CFG80211_VERSION_CODE >= KERNEL_VERSION(3, 8, 0)
+#if CFG80211_VERSION_CODE >= KERNEL_VERSION(3, 14, 0)
 /**
  * @brief tx mgmt frame
  *
@@ -2369,33 +2256,33 @@ woal_cfg80211_mgmt_frame_register(struct wiphy *wiphy,
 #endif
 int
 woal_cfg80211_mgmt_tx(struct wiphy *wiphy,
-#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 6, 0)
+#if CFG80211_VERSION_CODE < KERNEL_VERSION(3, 6, 0)
 		      struct net_device *dev,
 #else
 		      struct wireless_dev *wdev,
 #endif
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 14, 0)
+#if CFG80211_VERSION_CODE >= KERNEL_VERSION(3, 14, 0)
 		      struct cfg80211_mgmt_tx_params *params,
 #else
 		      struct ieee80211_channel *chan, bool offchan,
-#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 8, 0)
+#if CFG80211_VERSION_CODE < KERNEL_VERSION(3, 8, 0)
 		      enum nl80211_channel_type channel_type,
 		      bool channel_type_valid,
 #endif
 		      unsigned int wait, const u8 *buf, size_t len,
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 2, 0) || defined(COMPAT_WIRELESS)
+#if CFG80211_VERSION_CODE >= KERNEL_VERSION(3, 2, 0)
 		      bool no_cck,
 #endif
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 3, 0)
+#if CFG80211_VERSION_CODE >= KERNEL_VERSION(3, 3, 0)
 		      bool dont_wait_for_ack,
 #endif
 #endif
 		      u64 * cookie)
 {
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 6, 0)
+#if CFG80211_VERSION_CODE >= KERNEL_VERSION(3, 6, 0)
 	struct net_device *dev = wdev->netdev;
 #endif
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 14, 0)
+#if CFG80211_VERSION_CODE >= KERNEL_VERSION(3, 14, 0)
 #if defined(WIFI_DIRECT_SUPPORT)
 	struct ieee80211_channel *chan = params->chan;
 	unsigned int wait = params->wait;
@@ -2412,14 +2299,14 @@ woal_cfg80211_mgmt_tx(struct wiphy *wiphy,
 	t_u32 pkt_type;
 	t_u32 tx_control;
 #if defined(WIFI_DIRECT_SUPPORT)
-#if LINUX_VERSION_CODE >= WIFI_DIRECT_KERNEL_VERSION
+#if CFG80211_VERSION_CODE >= WIFI_DIRECT_KERNEL_VERSION
 	t_u8 channel_status;
 	t_u32 duration;
 	moal_private *remain_priv = NULL;
 #endif
 #endif
 #if defined(WIFI_DIRECT_SUPPORT)
-#if LINUX_VERSION_CODE >= WIFI_DIRECT_KERNEL_VERSION
+#if CFG80211_VERSION_CODE >= WIFI_DIRECT_KERNEL_VERSION
 	unsigned long flags;
 	struct sk_buff *skb = NULL;
 	struct tx_status_info *tx_info = NULL;
@@ -2435,10 +2322,11 @@ woal_cfg80211_mgmt_tx(struct wiphy *wiphy,
 	}
 
 	/* If the packet is probe response, that means we are in listen phase,
-	   so we should not call remain_on_channel_cfg because remain_on_channl
-	   already handled it. If the packet if action, that means we are in
-	   PD/GO negotiation, so we should call remain_on_channel_cfg in order
-	   to receive action frame from peer device */
+	   so we should not call remain_on_channel_cfg because
+	   remain_on_channl already handled it. If the packet if action, that
+	   means we are in PD/GO negotiation, so we should call
+	   remain_on_channel_cfg in order to receive action frame from peer
+	   device */
 	if ((GET_BSS_ROLE(priv) == MLAN_BSS_ROLE_UAP) &&
 	    ieee80211_is_probe_resp(((struct ieee80211_mgmt *)buf)->
 				    frame_control)) {
@@ -2446,7 +2334,7 @@ woal_cfg80211_mgmt_tx(struct wiphy *wiphy,
 		goto done;
 	}
 #if defined(WIFI_DIRECT_SUPPORT)
-#if LINUX_VERSION_CODE >= WIFI_DIRECT_KERNEL_VERSION
+#if CFG80211_VERSION_CODE >= WIFI_DIRECT_KERNEL_VERSION
 	if (ieee80211_is_action(((struct ieee80211_mgmt *)buf)->frame_control)) {
 		if (priv->bss_type == MLAN_BSS_TYPE_WIFIDIRECT)
 			woal_cfg80211_display_p2p_actframe(buf, len, chan,
@@ -2459,8 +2347,7 @@ woal_cfg80211_mgmt_tx(struct wiphy *wiphy,
 			woal_cancel_timer(&priv->phandle->remain_timer);
 			woal_remain_timer_func(priv->phandle);
 		}
-		/* With sd8777 We have difficulty to receive response packet in
-		   500ms */
+		/* With sd8777 We have difficulty to receive response packet in 500ms */
 #define MGMT_TX_DEFAULT_WAIT_TIME	   1500
 		if (priv->phandle->remain_on_channel)
 			remain_priv =
@@ -2479,7 +2366,7 @@ woal_cfg80211_mgmt_tx(struct wiphy *wiphy,
 			}
 			if (priv->phandle->cookie) {
 				cfg80211_remain_on_channel_expired(
-#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 6, 0)
+#if CFG80211_VERSION_CODE < KERNEL_VERSION(3, 6, 0)
 									  remain_priv->
 									  netdev,
 #else
@@ -2492,7 +2379,7 @@ woal_cfg80211_mgmt_tx(struct wiphy *wiphy,
 									  &priv->
 									  phandle->
 									  chan,
-#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 8, 0)
+#if CFG80211_VERSION_CODE < KERNEL_VERSION(3, 8, 0)
 									  priv->
 									  phandle->
 									  channel_type,
@@ -2511,7 +2398,7 @@ woal_cfg80211_mgmt_tx(struct wiphy *wiphy,
 			(wait >
 			 MGMT_TX_DEFAULT_WAIT_TIME) ? wait :
 			MGMT_TX_DEFAULT_WAIT_TIME;
-#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 8, 0)
+#if CFG80211_VERSION_CODE < KERNEL_VERSION(3, 8, 0)
 		if (channel_type_valid)
 			ret = woal_cfg80211_remain_on_channel_cfg(priv,
 								  MOAL_IOCTL_WAIT,
@@ -2531,7 +2418,7 @@ woal_cfg80211_mgmt_tx(struct wiphy *wiphy,
 		if (ret) {
 			/* Return fail will cause p2p connnection fail */
 			woal_sched_timeout(2);
-#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 8, 0)
+#if CFG80211_VERSION_CODE < KERNEL_VERSION(3, 8, 0)
 			if (channel_type_valid)
 				ret = woal_cfg80211_remain_on_channel_cfg(priv,
 									  MOAL_IOCTL_WAIT,
@@ -2556,7 +2443,7 @@ woal_cfg80211_mgmt_tx(struct wiphy *wiphy,
 		} else {
 			priv->phandle->remain_on_channel = MTRUE;
 			priv->phandle->remain_bss_index = priv->bss_index;
-#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 8, 0)
+#if CFG80211_VERSION_CODE < KERNEL_VERSION(3, 8, 0)
 			priv->phandle->channel_type = channel_type;
 #endif
 			memcpy(&priv->phandle->chan, chan,
@@ -2583,7 +2470,7 @@ woal_cfg80211_mgmt_tx(struct wiphy *wiphy,
 		ret = -ENOMEM;
 		goto done;
 	}
-#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 8, 0)
+#if CFG80211_VERSION_CODE < KERNEL_VERSION(3, 8, 0)
 	*cookie = random32() | 1;
 #else
 	*cookie = prandom_u32() | 1;
@@ -2613,7 +2500,7 @@ woal_cfg80211_mgmt_tx(struct wiphy *wiphy,
 	pmbuf->buf_type = MLAN_BUF_TYPE_RAW_DATA;
 	pmbuf->bss_index = priv->bss_index;
 #if defined(WIFI_DIRECT_SUPPORT)
-#if LINUX_VERSION_CODE >= WIFI_DIRECT_KERNEL_VERSION
+#if CFG80211_VERSION_CODE >= WIFI_DIRECT_KERNEL_VERSION
 	if (ieee80211_is_action(((struct ieee80211_mgmt *)buf)->frame_control)) {
 		pmbuf->flags = MLAN_BUF_FLAG_TX_STATUS;
 		pmbuf->tx_seq_num = ++priv->tx_seq_num;
@@ -2648,12 +2535,12 @@ woal_cfg80211_mgmt_tx(struct wiphy *wiphy,
 		queue_work(priv->phandle->workqueue, &priv->phandle->main_work);
 
 #if defined(WIFI_DIRECT_SUPPORT)
-#if LINUX_VERSION_CODE >= WIFI_DIRECT_KERNEL_VERSION
+#if CFG80211_VERSION_CODE >= WIFI_DIRECT_KERNEL_VERSION
 		/* Delay 30ms to guarantee the packet has been already tx'ed,
-		   becuase if we call cfg80211_mgmt_tx_status() immediately,
-		   then wpa_supplicant will call cancel_remain_on_channel(),
-		   which may affect the mgmt frame tx. Meanwhile it is only
-		   necessary for P2P action handshake to wait 30ms. */
+		 * becuase if we call cfg80211_mgmt_tx_status() immediately,
+		 * then wpa_supplicant will call cancel_remain_on_channel(),
+		 * which may affect the mgmt frame tx. Meanwhile it is only
+		 * necessary for P2P action handshake to wait 30ms. */
 		if (ieee80211_is_action
 		    (((struct ieee80211_mgmt *)buf)->frame_control)) {
 			if (tx_info)
@@ -2665,8 +2552,8 @@ woal_cfg80211_mgmt_tx(struct wiphy *wiphy,
 #endif
 
 		/* Notify the mgmt tx status */
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 37) || defined(COMPAT_WIRELESS)
-#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 6, 0)
+#if CFG80211_VERSION_CODE >= KERNEL_VERSION(2, 6, 37)
+#if CFG80211_VERSION_CODE < KERNEL_VERSION(3, 6, 0)
 		cfg80211_mgmt_tx_status(dev, *cookie, buf, len, true,
 					GFP_ATOMIC);
 #else
@@ -2687,7 +2574,7 @@ woal_cfg80211_mgmt_tx(struct wiphy *wiphy,
 
 done:
 #if defined(WIFI_DIRECT_SUPPORT)
-#if LINUX_VERSION_CODE >= WIFI_DIRECT_KERNEL_VERSION
+#if CFG80211_VERSION_CODE >= WIFI_DIRECT_KERNEL_VERSION
 	if (status != MLAN_STATUS_PENDING) {
 		if (tx_info)
 			woal_remove_tx_info(priv, tx_info->tx_seq_num);
@@ -2839,7 +2726,7 @@ done:
 	return ret;
 }
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,14,0)
+#if CFG80211_VERSION_CODE >= KERNEL_VERSION(3,14,0)
 /**
  * @brief set Qos map
  *
@@ -3027,8 +2914,8 @@ woal_filter_beacon_ies(const t_u8 *ie, int len, t_u8 *ie_out, t_u16 wps_flag,
 	const t_u8 wmm_oui[4] = { 0x00, 0x50, 0xf2, 0x02 };
 	t_u8 find_p2p_ie = MFALSE;
 
-	/* ERP_INFO/EXTENDED_SUPPORT_RATES/HT_CAPABILITY/HT_OPERATION/WMM and
-	   WPS/P2P/WFD IE will be fileter out */
+	/* ERP_INFO/EXTENDED_SUPPORT_RATES/HT_CAPABILITY/HT_OPERATION/WMM
+	 * and WPS/P2P/WFD IE will be fileter out */
 	while (left_len >= 2) {
 		length = *(pos + 1);
 		id = *pos;
@@ -3046,8 +2933,9 @@ woal_filter_beacon_ies(const t_u8 *ie, int len, t_u8 *ie_out, t_u16 wps_flag,
 		case WLAN_EID_ERP_INFO:
 		case HT_CAPABILITY:
 		case HT_OPERATION:
-		case VHT_CAPABILITY:
-		case VHT_OPERATION:
+		case REGULATORY_CLASS:
+		case OVERLAPBSSSCANPARAM:
+		case WAPI_IE:
 			break;
 		case VENDOR_SPECIFIC_221:
 			/* filter out wmm ie */
@@ -3402,7 +3290,7 @@ woal_cfg80211_mgmt_frame_ie(moal_private *priv,
 						      proberesp_ies_len,
 						      proberesp_ies_data->
 						      ie_buffer);
-		} else {
+		} else if (proberesp_p2p_index != MLAN_CUSTOM_IE_AUTO_IDX_MASK) {
 			/* clear the probe response p2p ies */
 			if (proberesp_p2p_index > MAX_MGMT_IE_INDEX) {
 				PRINTM(MERROR,
@@ -3491,7 +3379,7 @@ woal_cfg80211_mgmt_frame_ie(moal_private *priv,
 			probereq_ies_data->mgmt_subtype_mask =
 				MGMT_MASK_PROBE_REQ;
 #if defined(WIFI_DIRECT_SUPPORT)
-#if LINUX_VERSION_CODE >= WIFI_DIRECT_KERNEL_VERSION
+#if CFG80211_VERSION_CODE >= WIFI_DIRECT_KERNEL_VERSION
 			if (priv->bss_type != MLAN_BSS_TYPE_WIFIDIRECT) {
 				/* filter out P2P/WFD ie */
 				probereq_ies_data->ie_length =
@@ -3509,7 +3397,7 @@ woal_cfg80211_mgmt_frame_ie(moal_private *priv,
 				pos = probereq_ies_data->ie_buffer;
 				memcpy(pos, probereq_ies, probereq_ies_len);
 #if defined(WIFI_DIRECT_SUPPORT)
-#if LINUX_VERSION_CODE >= WIFI_DIRECT_KERNEL_VERSION
+#if CFG80211_VERSION_CODE >= WIFI_DIRECT_KERNEL_VERSION
 			}
 #endif /* KERNEL_VERSION */
 #endif /* WIFI_DIRECT_SUPPORT && V14_FEATURE */
@@ -3602,6 +3490,8 @@ woal_cfg80211_setup_ht_cap(struct ieee80211_sta_ht_cap *ht_info,
 	if (dev_cap & MBIT(26))	/* Rx STBC supported */
 		ht_info->cap |= IEEE80211_HT_CAP_RX_STBC;
 	if (dev_cap & MBIT(27))	/* MIMO PS supported */
+		ht_info->cap |= 0;	/* WLAN_HT_CAP_SM_PS_STATIC */
+	else			/* Disable HT SM PS */
 		ht_info->cap |= IEEE80211_HT_CAP_SM_PS;
 	if (dev_cap & MBIT(29))	/* Green field supported */
 		ht_info->cap |= IEEE80211_HT_CAP_GRN_FLD;
@@ -3614,63 +3504,7 @@ woal_cfg80211_setup_ht_cap(struct ieee80211_sta_ht_cap *ht_info,
 	LEAVE();
 }
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 6, 0)
-/**
- *  @brief Sets up the CFG802.11 specific VHT capability fields
- *  with default values
- *
- * @param priv         A pointer to moal private structure
- *  @param vht_cap      A pointer to ieee80211_sta_vht_cap structure
- *
- *  @return             N/A
- */
-void
-woal_cfg80211_setup_vht_cap(moal_private *priv,
-			    struct ieee80211_sta_vht_cap *vht_cap)
-{
-	mlan_ioctl_req *req = NULL;
-	mlan_ds_11ac_cfg *cfg_11ac = NULL;
-	mlan_status status;
-
-	req = woal_alloc_mlan_ioctl_req(sizeof(mlan_ds_11ac_cfg));
-	if (req == NULL) {
-		status = MLAN_STATUS_FAILURE;
-		PRINTM(MERROR, "Fail to allocate buf for setup vht_cap\n");
-		goto done;
-	}
-	cfg_11ac = (mlan_ds_11ac_cfg *)req->pbuf;
-	cfg_11ac->sub_command = MLAN_OID_11AC_VHT_CFG;
-	req->req_id = MLAN_IOCTL_11AC_CFG;
-	req->action = MLAN_ACT_GET;
-	cfg_11ac->param.vht_cfg.band = BAND_SELECT_A;
-	cfg_11ac->param.vht_cfg.txrx = MLAN_RADIO_RX;
-	status = woal_request_ioctl(priv, req, MOAL_CMD_WAIT);
-	if (MLAN_STATUS_SUCCESS != status) {
-		PRINTM(MERROR, "Fail to get vht_cfg\n");
-		goto done;
-	}
-	vht_cap->vht_supported = true;
-	vht_cap->cap = cfg_11ac->param.vht_cfg.vht_cap_info;
-	vht_cap->vht_mcs.rx_mcs_map = (t_u16)cfg_11ac->param.vht_cfg.vht_rx_mcs;
-	vht_cap->vht_mcs.rx_highest =
-		(t_u16)cfg_11ac->param.vht_cfg.vht_rx_max_rate;
-	vht_cap->vht_mcs.tx_mcs_map = (t_u16)cfg_11ac->param.vht_cfg.vht_tx_mcs;
-	vht_cap->vht_mcs.tx_highest =
-		(t_u16)cfg_11ac->param.vht_cfg.vht_tx_max_rate;
-	PRINTM(MCMND,
-	       "vht_cap=0x%x rx_mcs_map=0x%x rx_max=0x%x tx_mcs_map=0x%x tx_max=0x%x\n",
-	       vht_cap->cap, vht_cap->vht_mcs.rx_mcs_map,
-	       vht_cap->vht_mcs.rx_highest, vht_cap->vht_mcs.tx_mcs_map,
-	       vht_cap->vht_mcs.tx_highest);
-done:
-	if (status != MLAN_STATUS_PENDING)
-		kfree(req);
-	LEAVE();
-	return;
-}
-#endif
-
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 8, 0)
+#if CFG80211_VERSION_CODE >= KERNEL_VERSION(3, 8, 0)
 /**
  * @brief create cfg80211_chan_def structure based on chan_band info
  *
@@ -3689,9 +3523,9 @@ woal_chandef_create(moal_private *priv, struct cfg80211_chan_def *chandef,
 
 	ENTER();
 	chandef->center_freq2 = 0;
-	if (pchan_info->band_config.chanBand == BAND_2GHZ)
+	if (pchan_info->bandcfg.chanBand == BAND_2GHZ)
 		band = IEEE80211_BAND_2GHZ;
-	else if (pchan_info->band_config.chanBand == BAND_5GHZ)
+	else if (pchan_info->bandcfg.chanBand == BAND_5GHZ)
 		band = IEEE80211_BAND_5GHZ;
 	chandef->chan = ieee80211_get_channel(priv->wdev->wiphy,
 					      ieee80211_channel_to_frequency
@@ -3703,7 +3537,7 @@ woal_chandef_create(moal_private *priv, struct cfg80211_chan_def *chandef,
 		status = MLAN_STATUS_FAILURE;
 		goto done;
 	}
-	switch (pchan_info->band_config.chanWidth) {
+	switch (pchan_info->bandcfg.chanWidth) {
 	case CHAN_BW_20MHZ:
 		if (pchan_info->is_11n_enabled)
 			chandef->width = NL80211_CHAN_WIDTH_20;
@@ -3713,16 +3547,10 @@ woal_chandef_create(moal_private *priv, struct cfg80211_chan_def *chandef,
 		break;
 	case CHAN_BW_40MHZ:
 		chandef->width = NL80211_CHAN_WIDTH_40;
-		if (pchan_info->band_config.chan2Offset == SEC_CHAN_ABOVE)
+		if (pchan_info->bandcfg.chan2Offset == SEC_CHAN_ABOVE)
 			chandef->center_freq1 = chandef->chan->center_freq + 10;
-		else if (pchan_info->band_config.chan2Offset == SEC_CHAN_BELOW)
+		else if (pchan_info->bandcfg.chan2Offset == SEC_CHAN_BELOW)
 			chandef->center_freq1 = chandef->chan->center_freq - 10;
-		break;
-	case CHAN_BW_80MHZ:
-		chandef->width = NL80211_CHAN_WIDTH_80;
-		chandef->center_freq1 =
-			ieee80211_channel_to_frequency(pchan_info->center_chan,
-						       band);
 		break;
 	default:
 		break;

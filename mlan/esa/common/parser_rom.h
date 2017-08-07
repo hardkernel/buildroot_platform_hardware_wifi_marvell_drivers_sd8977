@@ -2,7 +2,7 @@
  *
  *  @brief This file contains the data structrue for iepointer and declare the parse function
  *
- * Copyright (C) 2014-2016, Marvell International Ltd.
+ * Copyright (C) 2014-2017, Marvell International Ltd.
  *
  * This software file (the "File") is distributed by Marvell International
  * Ltd. under the terms of the GNU General Public License Version 2, June 1991
@@ -42,10 +42,12 @@ typedef enum {
 } VendorSpecificIEType_e;
 
 typedef struct {
-	/* IMPORTANT: please read before you modify this struct: Some of the
-	   members of this struct are used in ROM code. Therefore, please do
-	   not change any existing field, including its name and type. If you
-	   want to add a new element into this struct add it at the end. */
+	/* IMPORTANT: please read before you modify this struct:
+	   Some of the members of this struct are used in ROM code.
+	   Therefore, please do not change any existing field, including
+	   its name and type. If you want to add a new element into
+	   this struct add it at the end.
+	 */
 	IEEEtypes_SsIdElement_t *pSsid;
 	IEEEtypes_TimElement_t *pTim;
 	IEEEtypes_WPAElement_t *pWpa;
@@ -74,10 +76,12 @@ typedef struct {
 } IEPointers_t;
 
 typedef struct {
-	/* IMPORTANT: please read before you modify this struct: Some of the
-	   members of this struct are used in ROM code. Therefore, please do
-	   not change any existing field, including its name and type. If you
-	   want to add a new element into this struct add it at the end. */
+	/* IMPORTANT: please read before you modify this struct:
+	   Some of the members of this struct are used in ROM code.
+	   Therefore, please do not change any existing field, including
+	   its name and type. If you want to add a new element into
+	   this struct add it at the end.
+	 */
 	IEEEtypes_SsIdElement_t *pSsid;
 	IEEEtypes_TimElement_t *pTim;
 	IEEEtypes_DsParamElement_t *pDsParam;
@@ -86,16 +90,18 @@ typedef struct {
 
 	UINT8 numSsIdLs;
 	IEEEtypes_SsIdLElement_t *pSsIdL;	/* Only the first SSIDL found,
-						   ** need iterator to get next
-						   since ** multiple may be in
-						   beacon */
+						 **   need iterator to get next since
+						 **   multiple may be in beacon
+						 */
 } ScanIePointers_t;
 
 typedef struct {
-	/* IMPORTANT: please read before you modify this struct: Some of the
-	   members of this struct are used in ROM code. Therefore, please do
-	   not change any existing field, including its name and type. If you
-	   want to add a new element into this struct add it at the end. */
+	/* IMPORTANT: please read before you modify this struct:
+	   Some of the members of this struct are used in ROM code.
+	   Therefore, please do not change any existing field, including
+	   its name and type. If you want to add a new element into
+	   this struct add it at the end.
+	 */
 	IEEEtypes_SsIdElement_t *pSsid;
 	IEEEtypes_DsParamElement_t *pDsParam;
 
